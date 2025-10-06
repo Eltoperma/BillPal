@@ -11,7 +11,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'BillPal',
       theme: ThemeData(
         // This is the theme of your application.
         //
@@ -29,11 +29,236 @@ class MyApp extends StatelessWidget {
         // This works for code too, not just values: Most code changes can be
         // tested with just a hot reload.
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        useMaterial3: true,
+        fontFamily: 'Roboto',
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      //alt: 
+      //home: const MyHomePage(title: 'BillPal'),
+      home: const DashboardPage(),
     );
   }
 }
+
+
+// Die Startseite wie im Mockup.
+/// Enthält:
+/// - zwei Info-Karten (Verbindlichkeiten / Forderungen)
+/// - ein Kreisdiagramm (CustomPaint)
+/// - ein Zitat
+/// - einen Floating Action Button (Plus)
+class DashboardPage extends StatelessWidget {
+  const DashboardPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    // Beispiel-Daten für das Pie-Chart (Anteile müssen sich zu 1.0 summieren)
+    final pieData = <_PieSlice>[
+      _PieSlice(value: 0.35, color: const Color(0xFF26C281)), // grün
+      _PieSlice(value: 0.30, color: const Color(0xFF5B8DEF)), // blau
+      _PieSlice(value: 0.20, color: const Color(0xFFF6C443)), // gelb
+      _PieSlice(value: 0.15, color: const Color(0xFFF06263)), // rot
+    ];
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFF4F6F8), // helles Grau wie im Screenshot
+      // Optional: AppBar ausblenden, weil der Mockup keine hat
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+          child: Column(
+            children: [
+              // OBERER BEREICH: zwei Karten
+              Row(
+                children: const [
+                  Expanded(
+                    child: _InfoCard(
+                      title: 'Verbindlichkeiten',
+                      amount: 120.0,
+                      amountColor: Color(0xFFE53935), // rot
+                    ),
+                  ),
+                  SizedBox(width: 16),
+                  Expanded(
+                    child: _InfoCard(
+                      title: 'Forderungen',
+                      amount: 250.0,
+                      amountColor: Color(0xFF2E7D32), // grün
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 32),
+
+              // MITTE: Kreisdiagramm
+              // Wir benutzen CustomPaint, damit kein externes Package nötig ist.
+              Center(
+                child: SizedBox(
+                  width: 240,
+                  height: 240,
+                  child: CustomPaint(
+                    painter: _PieChartPainter(pieData),
+                    child: const SizedBox.expand(),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // Zitat unten, leicht grau und kursiv
+              const Text(
+                '„Zu viel Monat am Ende des Geldes.“',
+                style: TextStyle(
+                  fontStyle: FontStyle.italic,
+                  color: Colors.black54,
+                  fontSize: 14,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const Spacer(),
+            ],
+          ),
+        ),
+      ),
+
+      // FAB unten rechts mit Plus
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          // später: Navigation zum "Neue Rechnung"-Flow
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Neue Rechnung hinzufügen')),
+          );
+        },
+        child: const Icon(Icons.add),
+      ),
+    );
+  }
+}
+
+// Eine wiederverwendbare Karte für Kennzahlen.
+/// - [title]: graue Überschrift
+/// - [amount]: Zahl, automatisch als „€“ formatiert
+/// - [amountColor]: Farbe der Zahl (z.B. rot/grün)
+class _InfoCard extends StatelessWidget {
+  final String title;
+  final double amount;
+  final Color amountColor;
+
+  const _InfoCard({
+    required this.title,
+    required this.amount,
+    required this.amountColor,
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 86,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: const [
+          // sanfter „Card“-Schatten
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 12,
+            offset: Offset(0, 6),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              color: Colors.black54,
+              fontWeight: FontWeight.w600,
+              fontSize: 16,
+            ),
+          ),
+          const Spacer(),
+          Text(
+            _formatEuro(amount),
+            style: TextStyle(
+              color: amountColor,
+              fontWeight: FontWeight.w800,
+              fontSize: 22,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Hilfsfunktion um 250 -> "250€" zu formatieren.
+/// Für echte Währungen später lieber NumberFormat (intl-Package) verwenden.
+String _formatEuro(double value) => '${value.toStringAsFixed(0)}€';
+
+/// Datenmodell für ein Kreisdiagramm-Segment.
+class _PieSlice {
+  final double value; // Anteil (0..1)
+  final Color color;  // Segment-Farbe
+
+  const _PieSlice({required this.value, required this.color});
+}
+
+/// CustomPainter, der das Kreisdiagramm zeichnet.
+/// Funktionsweise:
+/// - Wir laufen die Liste der Segmente durch und malen für jedes Segment
+///   einen Bogen (Arc) mit der entsprechenden Länge.
+/// - startAngle steigt kumulativ, damit die Segmente sich anschließen.
+/// - Zusätzlich malen wir in der Mitte einen weißen Kreis, um den
+///   "Donut"-Look aus dem Screenshot zu imitieren.
+class _PieChartPainter extends CustomPainter {
+  final List<_PieSlice> slices;
+
+  _PieChartPainter(this.slices);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = Offset.zero & size;
+    final center = rect.center;
+    final radius = size.shortestSide / 2;
+
+    // Linienbreite für „Donut“. Je größer, desto „dicker“.
+    final strokeWidth = radius * 0.6;
+
+    var startAngle = -90.0 * (3.1415926535 / 180.0); // Start bei 12 Uhr
+
+    for (final slice in slices) {
+      final sweepAngle = slice.value * 2 * 3.1415926535;
+
+      final paint = Paint()
+        ..color = slice.color
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = strokeWidth
+        ..strokeCap = StrokeCap.butt;
+
+      // Wir zeichnen den Bogen als Ring (donut style)
+      final arcRect = Rect.fromCircle(center: center, radius: radius - strokeWidth / 2);
+      canvas.drawArc(arcRect, startAngle, sweepAngle, false, paint);
+
+      startAngle += sweepAngle;
+    }
+
+    // Optional: kleiner Schattenkreis unter dem Donut für Tiefe
+    final shadowPaint = Paint()
+      ..color = Colors.black12
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
+    canvas.drawCircle(center, radius * 0.02, shadowPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _PieChartPainter oldDelegate) {
+    // neu zeichnen, wenn sich die Daten ändern
+    return oldDelegate.slices != slices;
+  }
+}
+
+
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
