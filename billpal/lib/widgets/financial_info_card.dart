@@ -13,7 +13,7 @@ class BillSharingCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 120,
+      constraints: const BoxConstraints(minHeight: 100),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -28,9 +28,11 @@ class BillSharingCard extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        mainAxisSize: MainAxisSize.min,
         children: [
+          // Header mit Icon und Titel
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
                 padding: const EdgeInsets.all(6),
@@ -40,7 +42,7 @@ class BillSharingCard extends StatelessWidget {
                 ),
                 child: Icon(
                   card.icon,
-                  size: 18,
+                  size: 16,
                   color: card.color,
                 ),
               ),
@@ -54,18 +56,21 @@ class BillSharingCard extends StatelessWidget {
                       card.title,
                       style: const TextStyle(
                         color: Colors.black87,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w700,
                         fontSize: 14,
+                        height: 1.2,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: 1),
                     Text(
                       card.subtitle,
                       style: const TextStyle(
                         color: Colors.black54,
+                        fontWeight: FontWeight.w500,
                         fontSize: 11,
+                        height: 1.1,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -75,14 +80,19 @@ class BillSharingCard extends StatelessWidget {
               ),
             ],
           ),
+          
+          const SizedBox(height: 12),
+          
+          // Betrag
           Align(
             alignment: Alignment.centerRight,
             child: Text(
               card.formattedAmount,
               style: TextStyle(
                 color: card.color,
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w900,
                 fontSize: 22,
+                height: 1.0,
               ),
             ),
           ),

@@ -47,7 +47,7 @@ class BillSharingAnalyticsService {
         amount: summary.totalOwed,
         color: Colors.red.shade600,
         icon: Icons.arrow_upward,
-        subtitle: summary.peopleIOweMoney == 1 ? '1 Person' : '${summary.peopleIOweMoney} Personen',
+        subtitle: '${summary.peopleIOweMoney} Person${summary.peopleIOweMoney == 1 ? '' : 'en'}',
         count: summary.peopleIOweMoney,
       ),
       SummaryCard(
@@ -55,7 +55,7 @@ class BillSharingAnalyticsService {
         amount: summary.totalOwedToMe,
         color: Colors.green.shade600,
         icon: Icons.arrow_downward,
-        subtitle: summary.peopleWhoOweMeMoney == 1 ? '1 Person' : '${summary.peopleWhoOweMeMoney} Personen',
+        subtitle: '${summary.peopleWhoOweMeMoney} Person${summary.peopleWhoOweMeMoney == 1 ? '' : 'en'}',
         count: summary.peopleWhoOweMeMoney,
       ),
     ];
