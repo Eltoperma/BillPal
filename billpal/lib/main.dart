@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'screens/dashboard_page.dart';
+import 'pages/dashboard_page.dart';
 
 void main() {
   runApp(const BillPalApp());
