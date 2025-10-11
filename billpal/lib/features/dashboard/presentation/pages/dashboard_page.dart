@@ -1,72 +1,128 @@
+import 'package:billpal/features/dashboard/application/dashboard_controller.dart';
+import 'package:billpal/features/dashboard/presentation/widgets/add_bill_fab.dart';
+import 'package:billpal/features/dashboard/presentation/widgets/debts_list.dart';
+import 'package:billpal/features/dashboard/presentation/widgets/event_suggestions.dart';
+import 'package:billpal/features/dashboard/presentation/widgets/expense_chart_section.dart';
+import 'package:billpal/features/dashboard/presentation/widgets/header.dart';
+import 'package:billpal/features/dashboard/presentation/widgets/summary_cards.dart';
+import 'package:billpal/services/finance_service.dart';
+import 'package:billpal/services/invoice_service.dart';
 import 'package:flutter/material.dart';
-import '../widgets/info_card.dart';
-import '../widgets/pie_chart.dart';
 
-/// Startseite wie im Mockup.
-class DashboardPage extends StatelessWidget {
+class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
 
   @override
+  State<DashboardPage> createState() => _DashboardPageState();
+}
+
+class _DashboardPageState extends State<DashboardPage> {
+  late final DashboardController _controller;
+  DashboardState _state = const DashboardState(isLoading: true);
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = DashboardController(
+      analytics: BillSharingAnalyticsService(),
+      bills: BillSharingService(),
+    );
+    _reload();
+  }
+
+  // Reload der Daten
+  Future<void> _reload() async {
+    setState(() => _state = _state.copyWith(isLoading: true));
+    // Lädt neue Demo Daten
+    final s = await _controller.load();
+    setState(() => _state = s);
+  }
+
+  @override
   Widget build(BuildContext context) {
-    const pieData = <PieSlice>[
-      PieSlice(value: 0.35, color: Color(0xFF26C281)), // grün
-      PieSlice(value: 0.30, color: Color(0xFF5B8DEF)), // blau
-      PieSlice(value: 0.20, color: Color(0xFFF6C443)), // gelb
-      PieSlice(value: 0.15, color: Color(0xFFF06263)), // rot
-    ];
+    if (_state.isLoading || _state.summary == null) {
+      return const Scaffold(
+        backgroundColor: Color(0xFFF4F6F8),
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    final summary = _state.summary!;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF4F6F8),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-          child: Column(
-            children: [
-              Row(
-                children: const [
-                  Expanded(
-                    child: InfoCard(
-                      title: 'Verbindlichkeiten',
-                      amount: 120.53,
-                      amountColor: Color(0xFFE53935),
-                    ),
-                  ),
-                  SizedBox(width: 16),
-                  Expanded(
-                    child: InfoCard(
-                      title: 'Forderungen',
-                      amount: 260,
-                      amountColor: Color(0xFF2E7D32),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 32),
-              Center(
-                child: SizedBox(
-                  width: 240, height: 240,
-                  child: const PieChart(slices: pieData),
-                ),
-              ),
-              const SizedBox(height: 24),
-              const Text(
-                '„Zu viel Monat am Ende des Geldes.“',
-                style: TextStyle(fontStyle: FontStyle.italic, color: Colors.black54, fontSize: 14),
-                textAlign: TextAlign.center,
-              ),
-              const Spacer(),
-            ],
+        child: RefreshIndicator(
+          onRefresh: _reload,
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header
+                DashboardHeader(summary: summary),
+
+                const SizedBox(height: 24),
+
+                // Karten: Schulden-Übersicht
+                SummaryCards(cards: _state.summaryCards),
+
+                const SizedBox(height: 32),
+
+                // Kreisdiagramm: Ausgaben-Kategorien
+                ExpenseChartSection(expenseSlices: _state.pieSlices),
+
+                const SizedBox(height: 32),
+
+                // Karte: aktuelle Schulden Details
+                DebtsList(summary: summary),
+
+                const SizedBox(height: 24),
+
+                // Event-Vorschläge (Karten)
+                EventSuggestionsList(suggestions: _state.suggestions),
+
+                const SizedBox(height: 100),
+              ],
+            ),
           ),
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // später: zum „Neue Rechnung“-Flow navigieren
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Neue Rechnung hinzufügen')),
-          );
-        },
-        child: const Icon(Icons.add),
+      // Button: Rechnung teilen (hinzufügen)
+      floatingActionButton: AddBillFab(onPressed: _showAddBillDialog),
+    );
+  }
+
+  // Platzhalter für die Funktion 'Rechnungen hinzuzufügen'
+  void _showAddBillDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Rechnung teilen'),
+        content: const Text(
+          'Hier würdest du eine neue Rechnung mit Freunden teilen können:\n\n'
+          '📷 Foto machen oder auswählen\n'
+          '🤖 OCR zum automatischen Auslesen\n'
+          '👥 Freunde auswählen\n'
+          '💰 Beträge aufteilen\n'
+          '📅 Event zuordnen',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Schließen'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Feature kommt bald! 🚀')),
+              );
+            },
+            child: const Text('Verstanden'),
+          ),
+        ],
       ),
     );
   }

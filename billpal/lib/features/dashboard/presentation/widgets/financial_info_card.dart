@@ -1,5 +1,5 @@
+import 'package:billpal/models/financial_data.dart';
 import 'package:flutter/material.dart';
-import '../models/financial_data.dart';
 
 /// Wiederverwendbare Info-Karte für Bill-Sharing Übersicht
 class BillSharingCard extends StatelessWidget {
@@ -34,10 +34,12 @@ class BillSharingCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+
+              // Icon
               Container(
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  color: card.color.withOpacity(0.1),
+                  color: card.color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(
@@ -46,7 +48,10 @@ class BillSharingCard extends StatelessWidget {
                   color: card.color,
                 ),
               ),
+
               const SizedBox(width: 10),
+
+              // Text
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -64,6 +69,8 @@ class BillSharingCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 1),
+
+                    // Personen Anzahl
                     Text(
                       card.subtitle,
                       style: const TextStyle(
@@ -97,80 +104,6 @@ class BillSharingCard extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-/// Einfache Karte für Schnellübersicht
-class SimpleBillCard extends StatelessWidget {
-  final String title;
-  final double amount;
-  final Color color;
-  final IconData icon;
-  final VoidCallback? onTap;
-
-  const SimpleBillCard({
-    required this.title,
-    required this.amount,
-    required this.color,
-    required this.icon,
-    this.onTap,
-    super.key,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        height: 86,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: const [
-            BoxShadow(
-              color: Colors.black12,
-              blurRadius: 12,
-              offset: Offset(0, 6),
-            ),
-          ],
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  icon,
-                  size: 16,
-                  color: Colors.black54,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    title,
-                    style: const TextStyle(
-                      color: Colors.black54,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 16,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const Spacer(),
-            Text(
-              '${amount.toStringAsFixed(2)}€',
-              style: TextStyle(
-                color: color,
-                fontWeight: FontWeight.w800,
-                fontSize: 22,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

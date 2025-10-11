@@ -1,5 +1,5 @@
 import 'dart:math';
-import '../models/invoice.dart';
+import 'package:billpal/models/invoice.dart';
 
 /// Service für die Verwaltung von geteilten Rechnungen zwischen Freunden
 class BillSharingService {

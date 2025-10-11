@@ -1,7 +1,7 @@
+import 'package:billpal/models/financial_data.dart';
+import 'package:billpal/models/invoice.dart';
+import 'package:billpal/services/invoice_service.dart';
 import 'package:flutter/material.dart';
-import '../models/financial_data.dart';
-import '../models/invoice.dart';
-import 'invoice_service.dart';
 
 /// Service für Bill-Sharing Analysen und Berechnungen
 class BillSharingAnalyticsService {
@@ -187,14 +187,14 @@ class BillSharingAnalyticsService {
   }
 
   /// Erstellt Pie-Chart-Daten
-  List<ExpensePieSlice> getExpensePieSlices() {
+  List<PieSlice> getExpensePieSlices() {
     final categories = getExpenseCategories();
     final total = categories.fold<double>(0, (sum, cat) => sum + cat.amount);
     
     if (total == 0) return [];
     
     return categories
-        .map((cat) => ExpensePieSlice(
+        .map((cat) => PieSlice(
               value: cat.amount / total,
               color: cat.color,
               label: cat.category,

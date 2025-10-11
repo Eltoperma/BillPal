@@ -1,5 +1,5 @@
 import 'dart:math';
-import '../models/financial_data.dart';
+import 'package:billpal/models/financial_data.dart';
 
 /// Service für OCR-Funktionalität (Mock-Implementation)
 class OCRService {

@@ -1,3 +1,5 @@
+import 'package:billpal/core/utils/currency.dart';
+
 /// Datenmodell für eine Person/Freund
 class Person {
   final String id;
@@ -219,7 +221,7 @@ class Debt {
   });
 
   @override
-  String toString() => 'Debt(${debtor.name} owes ${creditor.name} ${amount.toStringAsFixed(2)}€)';
+  String toString() => 'Debt(${debtor.name} owes ${creditor.name} ${euro(amount)})';
 }
 
 /// Erweiterungen für bessere Lesbarkeit

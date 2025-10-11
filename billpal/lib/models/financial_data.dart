@@ -1,5 +1,6 @@
+import 'package:billpal/core/utils/currency.dart';
+import 'package:billpal/models/invoice.dart';
 import 'package:flutter/material.dart';
-import 'invoice.dart';
 
 /// Zusammenfassung der geteilten Rechnungen für das Dashboard
 class BillSharingSummary {
@@ -69,7 +70,7 @@ class SummaryCard {
   });
 
   /// Formatierte Anzeige des Betrags
-  String get formattedAmount => '${amount.toStringAsFixed(2)}€';
+  String get formattedAmount => euro(amount);
 
   /// Formatierte Anzeige der Anzahl
   String get formattedCount => count == 1 ? '$count Person' : '$count Personen';
@@ -162,14 +163,14 @@ class ExpenseCategory {
 }
 
 /// Segment für Kreisdiagramm
-class ExpensePieSlice {
+class PieSlice {
   final double value; // Anteil (0..1)
   final Color color;
   final String label;
   final double amount;
   final int billCount;
 
-  const ExpensePieSlice({
+  const PieSlice({
     required this.value,
     required this.color,
     required this.label,
@@ -196,19 +197,4 @@ class FriendStats {
     required this.lastActivity,
   });
 
-  String get debtStatus {
-    if (currentDebt > 0) {
-      return 'Schuldet dir ${currentDebt.toStringAsFixed(2)}€';
-    } else if (currentDebt < 0) {
-      return 'Du schuldest ${(-currentDebt).toStringAsFixed(2)}€';
-    } else {
-      return 'Ausgeglichen';
-    }
-  }
-
-  Color get debtColor {
-    if (currentDebt > 0) return Colors.green;
-    if (currentDebt < 0) return Colors.red;
-    return Colors.grey;
-  }
 }
