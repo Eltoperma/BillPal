@@ -59,6 +59,7 @@ class DebtsList extends StatelessWidget {
   }
 
   Widget _balancedCard() => Container(
+    width: double.infinity,
     padding: const EdgeInsets.all(24),
     decoration: _box(),
     child: Column(
