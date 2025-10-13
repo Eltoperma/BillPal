@@ -1,7 +1,20 @@
 import 'package:billpal/app/app.dart';
+import 'package:billpal/core/theme/theme_controller.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import 'package:intl/intl.dart';
 
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
 
-void main() {
-  runApp(const BillPalApp());
+  final themeController = ThemeController();
+
+  // Parallel initialisieren
+  await Future.wait([
+    themeController.load(),
+    initializeDateFormatting('de_DE', ''),
+  ]);
+
+  Intl.defaultLocale = 'de_DE';
+  runApp(BillPalApp(themeController: themeController));
 }

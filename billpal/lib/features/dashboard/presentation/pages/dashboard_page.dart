@@ -1,16 +1,20 @@
+import 'package:billpal/features/bills/presentation/pages/add_invoice_form.dart';
+import 'package:billpal/features/bills/presentation/entrypoint/add_invoice_entrypoint.dart';
 import 'package:billpal/features/dashboard/application/dashboard_controller.dart';
-import 'package:billpal/features/dashboard/presentation/widgets/add_bill_fab.dart';
 import 'package:billpal/features/dashboard/presentation/widgets/debts_list.dart';
 import 'package:billpal/features/dashboard/presentation/widgets/event_suggestions.dart';
 import 'package:billpal/features/dashboard/presentation/widgets/expense_chart_section.dart';
 import 'package:billpal/features/dashboard/presentation/widgets/header.dart';
 import 'package:billpal/features/dashboard/presentation/widgets/summary_cards.dart';
+import 'package:billpal/features/dashboard/presentation/widgets/theme_toggle.dart';
 import 'package:billpal/services/finance_service.dart';
 import 'package:billpal/services/invoice_service.dart';
+import 'package:billpal/core/theme/theme_controller.dart';
 import 'package:flutter/material.dart';
 
 class DashboardPage extends StatefulWidget {
-  const DashboardPage({super.key});
+  final ThemeController themeController;
+  const DashboardPage({super.key, required this.themeController});
 
   @override
   State<DashboardPage> createState() => _DashboardPageState();
@@ -40,17 +44,19 @@ class _DashboardPageState extends State<DashboardPage> {
 
   @override
   Widget build(BuildContext context) {
+    final sc = Theme.of(context).colorScheme;
+
     if (_state.isLoading || _state.summary == null) {
-      return const Scaffold(
-        backgroundColor: Color(0xFFF4F6F8),
-        body: Center(child: CircularProgressIndicator()),
+      return Scaffold(
+        backgroundColor: sc.surface,
+        body: const Center(child: CircularProgressIndicator()),
       );
     }
 
     final summary = _state.summary!;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F6F8),
+      backgroundColor: sc.surface,
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: _reload,
@@ -89,39 +95,23 @@ class _DashboardPageState extends State<DashboardPage> {
           ),
         ),
       ),
-      // Button: Rechnung teilen (hinzufügen)
-      floatingActionButton: AddBillFab(onPressed: _showAddBillDialog),
-    );
-  }
-
-  // Platzhalter für die Funktion 'Rechnungen hinzuzufügen'
-  void _showAddBillDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Rechnung teilen'),
-        content: const Text(
-          'Hier würdest du eine neue Rechnung mit Freunden teilen können:\n\n'
-          '📷 Foto machen oder auswählen\n'
-          '🤖 OCR zum automatischen Auslesen\n'
-          '👥 Freunde auswählen\n'
-          '💰 Beträge aufteilen\n'
-          '📅 Event zuordnen',
+      // Toggle für Theme
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [ThemeToggle(controller: widget.themeController)],
+          ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Schließen'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Feature kommt bald! 🚀')),
-              );
-            },
-            child: const Text('Verstanden'),
-          ),
+      ),
+      // Button: Rechnung teilen (hinzufügen)
+      floatingActionButton: AddInvoiceEntryButton(
+        people: const [
+          Person(id: 'tom', name: 'Tom'),
+          Person(id: 'sue', name: 'Sue'),
+          Person(id: 'max', name: 'Max'),
         ],
       ),
     );
