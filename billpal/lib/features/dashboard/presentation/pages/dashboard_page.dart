@@ -7,6 +7,8 @@ import 'package:billpal/features/dashboard/presentation/widgets/expense_chart_se
 import 'package:billpal/features/dashboard/presentation/widgets/header.dart';
 import 'package:billpal/features/dashboard/presentation/widgets/summary_cards.dart';
 import 'package:billpal/features/dashboard/presentation/widgets/theme_toggle.dart';
+import 'package:billpal/features/settings/presentation/widgets/app_drawer.dart';
+import 'package:billpal/l10n/locale_controller.dart';
 import 'package:billpal/services/finance_service.dart';
 import 'package:billpal/services/invoice_service.dart';
 import 'package:billpal/core/theme/theme_controller.dart';
@@ -14,7 +16,12 @@ import 'package:flutter/material.dart';
 
 class DashboardPage extends StatefulWidget {
   final ThemeController themeController;
-  const DashboardPage({super.key, required this.themeController});
+  final LocaleController localeController;
+  const DashboardPage({
+    super.key,
+    required this.themeController,
+    required this.localeController,
+  });
 
   @override
   State<DashboardPage> createState() => _DashboardPageState();
@@ -49,6 +56,10 @@ class _DashboardPageState extends State<DashboardPage> {
     if (_state.isLoading || _state.summary == null) {
       return Scaffold(
         backgroundColor: sc.surface,
+        endDrawer: AppDrawer(
+          themeController: widget.themeController,
+          localeController: widget.localeController,
+        ),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
@@ -57,55 +68,62 @@ class _DashboardPageState extends State<DashboardPage> {
 
     return Scaffold(
       backgroundColor: sc.surface,
+      endDrawer: AppDrawer(
+        themeController: widget.themeController,
+        localeController: widget.localeController,
+      ),
       body: SafeArea(
-        child: RefreshIndicator(
-          onRefresh: _reload,
-          child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Header
-                DashboardHeader(summary: summary),
+        child: Builder(
+          builder: (ctx) => RefreshIndicator(
+            onRefresh: _reload,
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(child: DashboardHeader(summary: summary)),
+                      const SizedBox(width: 8),
+                      IconButton(
+                        tooltip: 'Menu',
+                        onPressed: () => Scaffold.of(ctx).openEndDrawer(),
+                        icon: const Icon(Icons.menu),
+                      ),
+                    ],
+                  ),
 
-                const SizedBox(height: 24),
+                  const SizedBox(height: 24),
 
-                // Karten: Schulden-Übersicht
-                SummaryCards(cards: _state.summaryCards),
+                  // Karten: Schulden-Übersicht
+                  SummaryCards(cards: _state.summaryCards),
 
-                const SizedBox(height: 32),
+                  const SizedBox(height: 32),
 
-                // Kreisdiagramm: Ausgaben-Kategorien
-                ExpenseChartSection(expenseSlices: _state.pieSlices),
+                  // Kreisdiagramm: Ausgaben-Kategorien
+                  ExpenseChartSection(expenseSlices: _state.pieSlices),
 
-                const SizedBox(height: 32),
+                  const SizedBox(height: 32),
 
-                // Karte: aktuelle Schulden Details
-                DebtsList(summary: summary),
+                  // Karte: aktuelle Schulden Details
+                  DebtsList(summary: summary),
 
-                const SizedBox(height: 24),
+                  const SizedBox(height: 24),
 
-                // Event-Vorschläge (Karten)
-                EventSuggestionsList(suggestions: _state.suggestions),
+                  // Event-Vorschläge (Karten)
+                  EventSuggestionsList(suggestions: _state.suggestions),
 
-                const SizedBox(height: 100),
-              ],
+                  const SizedBox(height: 100),
+                ],
+              ),
             ),
           ),
         ),
       ),
-      // Toggle für Theme
-      bottomNavigationBar: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [ThemeToggle(controller: widget.themeController)],
-          ),
-        ),
-      ),
+
       // Button: Rechnung teilen (hinzufügen)
       floatingActionButton: AddInvoiceEntryButton(
         people: const [

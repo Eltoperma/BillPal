@@ -7,14 +7,21 @@
 
 import 'package:billpal/app/app.dart';
 import 'package:billpal/core/theme/theme_controller.dart';
+import 'package:billpal/l10n/locale_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   testWidgets('BillPal app test', (WidgetTester tester) async {
     final themeController = ThemeController();
+    final localeController = LocaleController();
     // Build our app and trigger a frame.
-    await tester.pumpWidget(BillPalApp(themeController: themeController));
+    await tester.pumpWidget(
+      BillPalApp(
+        themeController: themeController,
+        localeController: localeController,
+      ),
+    );
 
     // Verify that our BillPal dashboard loads
     expect(find.text('BillPal'), findsOneWidget);
