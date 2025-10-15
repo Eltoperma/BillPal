@@ -2,11 +2,9 @@ import 'package:billpal/features/bills/presentation/pages/add_invoice_form.dart'
 import 'package:billpal/features/bills/presentation/entrypoint/add_invoice_entrypoint.dart';
 import 'package:billpal/features/dashboard/application/dashboard_controller.dart';
 import 'package:billpal/features/dashboard/presentation/widgets/debts_list.dart';
-import 'package:billpal/features/dashboard/presentation/widgets/event_suggestions.dart';
 import 'package:billpal/features/dashboard/presentation/widgets/expense_chart_section.dart';
 import 'package:billpal/features/dashboard/presentation/widgets/header.dart';
 import 'package:billpal/features/dashboard/presentation/widgets/summary_cards.dart';
-import 'package:billpal/features/dashboard/presentation/widgets/theme_toggle.dart';
 import 'package:billpal/features/settings/presentation/widgets/app_drawer.dart';
 import 'package:billpal/l10n/locale_controller.dart';
 import 'package:billpal/services/finance_service.dart';
@@ -110,11 +108,6 @@ class _DashboardPageState extends State<DashboardPage> {
 
                   // Karte: aktuelle Schulden Details
                   DebtsList(summary: summary),
-
-                  const SizedBox(height: 24),
-
-                  // Event-Vorschläge (Karten)
-                  EventSuggestionsList(suggestions: _state.suggestions),
 
                   const SizedBox(height: 100),
                 ],
