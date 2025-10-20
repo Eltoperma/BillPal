@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../../bill_service.dart';
 
 // --- simple models just for the form (kannst du später in domain/models ziehen) ---
 class Person {
@@ -55,6 +56,7 @@ Future<void> openAddInvoice(
         ),
       ),
     );
+
   } else {
     await showDialog(
       context: context,
@@ -126,7 +128,7 @@ class _AddInvoiceFormState extends State<AddInvoiceForm> {
 
   double get _total => _items.fold(0.0, (s, i) => s + (i.amount ?? 0.0));
 
-  void _submit() {
+  void _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
     final hasValidItem = _items.any(
@@ -143,13 +145,92 @@ class _AddInvoiceFormState extends State<AddInvoiceForm> {
       );
       return;
     }
+
+    // InvoiceData für Callback erstellen
     final data = InvoiceData(
       title: _titleCtrl.text.trim(),
       dateTime: _dateTime,
       items: List.unmodifiable(_items),
     );
-    widget.onSubmit?.call(data);
-    Navigator.of(context).maybePop();
+
+    // BillService aufrufen um in DB zu speichern
+    try {
+      print('🟡 Starte Speichervorgang...');
+      final billService = BillService();
+      
+      // LineItems zu LineItemData konvertieren
+      print('🟡 Konvertiere ${_items.length} Items...');
+      final lineItemsData = <LineItemData>[];
+      
+      for (int i = 0; i < _items.length; i++) {
+        final item = _items[i];
+        print('🟡 Item ${i+1}: "${item.description}" - Amount: ${item.amount} - Assignee: ${item.assignee?.name} (ID: ${item.assignee?.id})');
+        
+        // Validierung
+        if (item.description.trim().isEmpty || 
+            item.amount == null || 
+            item.amount! <= 0 ||
+            item.assignee == null) {
+          print('⚠️ Item ${i+1} übersprungen (ungültig)');
+          continue;
+        }
+        
+        // Person ID zu int konvertieren
+        int? assigneeUserId;
+        try {
+          assigneeUserId = int.parse(item.assignee!.id);
+          print('✅ Person ID "${item.assignee!.id}" → $assigneeUserId');
+        } catch (e) {
+          print('❌ Fehler bei Person ID Konvertierung: "${item.assignee!.id}" → $e');
+          // Fallback: Verwende Hash der ID oder Default-Wert
+          assigneeUserId = item.assignee!.id.hashCode.abs() % 1000000; // Positive Zahl
+          print('🔧 Fallback Person ID: $assigneeUserId');
+        }
+        
+        lineItemsData.add(LineItemData(
+          description: item.description,
+          amount: item.amount!,
+          assigneeUserId: assigneeUserId,
+        ));
+      }
+
+      print('🟡 Gültige Items: ${lineItemsData.length}');
+      print('🟡 Titel: "${_titleCtrl.text.trim()}"');
+      print('🟡 Datum: $_dateTime');
+
+      // In DB speichern
+      print('🟡 Rufe BillService.saveInvoiceData auf...');
+      final billId = await billService.saveInvoiceData(
+        title: _titleCtrl.text.trim(),
+        dateTime: _dateTime,
+        userId: 1, // TODO: Aktuellen User hier einsetzen
+        lineItems: lineItemsData,
+      );
+
+      print('✅ Rechnung gespeichert! Bill-ID: $billId');
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Rechnung erfolgreich gespeichert! ID: $billId'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        
+        // Callback aufrufen falls gesetzt
+        widget.onSubmit?.call(data);
+        Navigator.of(context).maybePop();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Fehler beim Speichern: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -375,7 +456,7 @@ class _LineItemRowState extends State<_LineItemRow> {
             Expanded(
               flex: 3,
               child: DropdownButtonFormField<Person>(
-                value: _assignee,
+                initialValue: _assignee,
                 items: widget.people
                     .map((p) => DropdownMenuItem(value: p, child: Text(p.name)))
                     .toList(),
