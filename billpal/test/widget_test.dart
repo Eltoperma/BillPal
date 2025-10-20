@@ -5,26 +5,30 @@
 // gestures. You can also use WidgetTester to find child widgets in the widget
 // tree, read text, and verify that the values of widget properties are correct.
 
+import 'package:billpal/app/app.dart';
+import 'package:billpal/core/theme/theme_controller.dart';
+import 'package:billpal/l10n/locale_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:billpal/main.dart';
-
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
+  testWidgets('BillPal app test', (WidgetTester tester) async {
+    final themeController = ThemeController();
+    final localeController = LocaleController();
     // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+    await tester.pumpWidget(
+      BillPalApp(
+        themeController: themeController,
+        localeController: localeController,
+      ),
+    );
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    // Verify that our BillPal dashboard loads
+    expect(find.text('BillPal'), findsOneWidget);
+    expect(find.text('Geteilte Rechnungen mit Freunden'), findsOneWidget);
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    // Verify FAB is present
+    expect(find.byType(FloatingActionButton), findsOneWidget);
+    expect(find.text('Rechnung teilen'), findsOneWidget);
   });
 }
