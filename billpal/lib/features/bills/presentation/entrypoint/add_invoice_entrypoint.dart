@@ -1,5 +1,5 @@
 import 'package:billpal/features/bills/presentation/pages/add_invoice_form.dart';
-import 'package:billpal/models/invoice.dart'; // Verwende zentrales Person-Model
+import 'package:billpal/shared/domain/entities.dart';
 import 'package:flutter/material.dart';
 
 /// Welche UI soll für die Quellenwahl genutzt werden?

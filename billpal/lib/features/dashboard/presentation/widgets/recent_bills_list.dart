@@ -1,6 +1,5 @@
 import 'package:billpal/core/utils/currency.dart';
-import 'package:billpal/models/financial_data.dart';
-import 'package:billpal/models/invoice.dart';
+import 'package:billpal/shared/domain/entities.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 

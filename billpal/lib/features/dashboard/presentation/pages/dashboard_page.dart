@@ -8,7 +8,7 @@ import 'package:billpal/features/dashboard/presentation/widgets/recent_bills_lis
 import 'package:billpal/features/friends/presentation/widgets/friends_preview_card.dart';
 import 'package:billpal/features/settings/presentation/widgets/app_drawer.dart';
 import 'package:billpal/l10n/locale_controller.dart';
-import 'package:billpal/models/invoice.dart'; // Für Person-Model
+import 'package:billpal/shared/domain/entities.dart';
 import 'package:billpal/core/logging/app_logger.dart';
 import 'package:billpal/services/finance_service.dart';
 import 'package:billpal/services/invoice_service.dart';

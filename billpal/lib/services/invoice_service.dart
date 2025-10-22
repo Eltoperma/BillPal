@@ -1,5 +1,5 @@
 import 'dart:math';
-import 'package:billpal/models/invoice.dart';
+import 'package:billpal/shared/domain/entities.dart';
 import 'package:billpal/core/app_mode/app_mode_service.dart';
 import 'package:billpal/services/user_service.dart';
 import 'package:billpal/features/bills/bill_service.dart';

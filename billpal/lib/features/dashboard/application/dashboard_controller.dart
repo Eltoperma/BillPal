@@ -1,4 +1,4 @@
-import 'package:billpal/models/financial_data.dart';
+import 'package:billpal/shared/domain/entities.dart';
 import 'package:billpal/services/finance_service.dart';
 import 'package:billpal/services/invoice_service.dart';
 import 'package:flutter/foundation.dart';

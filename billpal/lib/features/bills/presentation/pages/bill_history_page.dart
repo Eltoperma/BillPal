@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../models/invoice.dart';
+import 'package:billpal/shared/domain/entities.dart';
 import '../../../../services/invoice_service.dart';
 import '../../../../core/logging/app_logger.dart';
 import 'package:billpal/core/utils/currency.dart';

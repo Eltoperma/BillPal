@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:billpal/models/invoice.dart'; // Zentrale Person-Klasse
+import 'package:billpal/shared/domain/entities.dart';
 import 'package:billpal/services/user_service.dart'; // Zentrale Freunde-Verwaltung
 import 'package:billpal/core/logging/app_logger.dart';
 import 'package:billpal/core/app_mode/app_mode_service.dart';
