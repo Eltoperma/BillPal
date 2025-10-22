@@ -1,81 +1,41 @@
 import 'dart:math';
 import 'package:billpal/models/invoice.dart';
+import 'package:billpal/core/app_mode/app_mode_service.dart';
+import 'package:billpal/services/user_service.dart';
 
 /// Service für die Verwaltung von geteilten Rechnungen zwischen Freunden
+/// 
+/// TODO: [CLEANUP] Nach vollständiger Migration Demo-Logik entfernen
+/// und durch echte Repository-Pattern ersetzen (Ende dieses Branches)
 class BillSharingService {
   static final BillSharingService _instance = BillSharingService._internal();
   factory BillSharingService() => _instance;
   BillSharingService._internal();
 
-  final List<Person> _friends = [];
+  final UserService _userService = UserService(); // Zentrale User-Verwaltung
   final List<SharedBill> _sharedBills = [];
   final Random _random = Random();
-  
-  // Der aktuelle Benutzer (für Demo-Zwecke)
-  late Person _currentUser;
 
   /// Initialisiert den Service mit Demo-Daten
-  void initializeDemoData() {
-    _friends.clear();
-    _sharedBills.clear();
+  /// 
+  /// TODO: [CLEANUP] Diese Methode entfernen und durch echte Repository-Calls ersetzen
+  Future<void> initializeDemoData() async {
+    final appMode = AppModeService();
     
-    // Erstelle Demo-Freunde
-    _createDemoFriends();
-    
-    // Erstelle Demo-Rechnungen
-    _createDemoSharedBills();
+    // Nur in Demo-Mode oder wenn uninitialized Demo-Daten laden
+    if (appMode.isDemoMode || appMode.isUninitialized) {
+      print('🎭 BillSharingService: Demo-Daten werden geladen (Mode: ${appMode.currentMode.name})');
+      _sharedBills.clear();
+      
+      // Erstelle Demo-Rechnungen (Freunde werden vom UserService verwaltet)
+      await _createDemoSharedBills();
+    } else {
+      print('🏠 BillSharingService: Real-Mode aktiv, keine Demo-Daten geladen');
+      // TODO: [CLEANUP] Hier später echte Repository-Calls implementieren
+    }
   }
 
-  void _createDemoFriends() {
-    _currentUser = Person(
-      id: 'user_me',
-      name: 'Ich',
-      email: 'me@example.com',
-      createdAt: DateTime.now().subtract(const Duration(days: 100)),
-    );
-
-    final demoFriends = [
-      Person(
-        id: 'friend_1',
-        name: 'Anna',
-        email: 'anna@example.com',
-        createdAt: DateTime.now().subtract(const Duration(days: 80)),
-      ),
-      Person(
-        id: 'friend_2',
-        name: 'Max',
-        phone: '+49123456789',
-        createdAt: DateTime.now().subtract(const Duration(days: 60)),
-      ),
-      Person(
-        id: 'friend_3',
-        name: 'Lisa',
-        email: 'lisa@example.com',
-        createdAt: DateTime.now().subtract(const Duration(days: 40)),
-      ),
-      Person(
-        id: 'friend_4',
-        name: 'Tom',
-        phone: '+49987654321',
-        createdAt: DateTime.now().subtract(const Duration(days: 30)),
-      ),
-      Person(
-        id: 'friend_5',
-        name: 'Sarah',
-        email: 'sarah@example.com',
-        createdAt: DateTime.now().subtract(const Duration(days: 20)),
-      ),
-      Person(
-        id: 'friend_6',
-        name: 'Tim',
-        createdAt: DateTime.now().subtract(const Duration(days: 10)),
-      ),
-    ];
-
-    _friends.addAll(demoFriends);
-  }
-
-  void _createDemoSharedBills() {
+  Future<void> _createDemoSharedBills() async {
     final now = DateTime.now();
     final events = [
       'Restaurant Tante Emma',
@@ -95,7 +55,7 @@ class BillSharingService {
       final totalAmount = 15.0 + _random.nextDouble() * 80.0; // 15€ - 95€
       
       // Zufällige Gruppe von Freunden für diese Rechnung
-      final involvedFriends = _getRandomFriends(2 + _random.nextInt(3)); // 2-4 Freunde
+      final involvedFriends = await _getRandomFriends(2 + _random.nextInt(3)); // 2-4 Freunde
       final paidBy = involvedFriends[_random.nextInt(involvedFriends.length)];
       
       final bill = SharedBill(
@@ -115,8 +75,10 @@ class BillSharingService {
     }
   }
 
-  List<Person> _getRandomFriends(int count) {
-    final allPeople = [_currentUser, ..._friends];
+  Future<List<Person>> _getRandomFriends(int count) async {
+    final currentUser = await _userService.getCurrentUser();
+    final friends = await _userService.getAllFriends();
+    final allPeople = [currentUser, ...friends];
     final shuffled = List<Person>.from(allPeople)..shuffle(_random);
     return shuffled.take(count).toList();
   }
@@ -216,13 +178,15 @@ class BillSharingService {
   }
 
   /// Gibt alle Freunde zurück
-  List<Person> getAllFriends() {
-    return List.unmodifiable(_friends);
+  /// 
+  /// TODO: [CLEANUP] Durch echte Repository-Calls ersetzen
+  Future<List<Person>> getAllFriends() async {
+    return await _userService.getAllFriends();
   }
 
   /// Gibt den aktuellen Benutzer zurück
-  Person getCurrentUser() {
-    return _currentUser;
+  Future<Person> getCurrentUser() async {
+    return await _userService.getCurrentUser();
   }
 
   /// Gibt alle geteilten Rechnungen zurück
@@ -231,8 +195,12 @@ class BillSharingService {
   }
 
   /// Fügt einen neuen Freund hinzu
-  void addFriend(Person friend) {
-    _friends.add(friend);
+  Future<Person> addFriend(Person friend) async {
+    return await _userService.addFriend(
+      name: friend.name,
+      email: friend.email,
+      phone: friend.phone,
+    );
   }
 
   /// Erstellt eine neue geteilte Rechnung
@@ -280,7 +248,9 @@ class BillSharingService {
   }
 
   /// Berechnet alle Schulden zwischen Personen
-  List<Debt> calculateAllDebts() {
+  /// 
+  /// TODO: [CLEANUP] Diese Methode muss async werden für echte Repository-Calls
+  Future<List<Debt>> calculateAllDebts() async {
     final Map<String, Map<String, double>> debtMatrix = {};
     
     for (final bill in _sharedBills) {
@@ -303,8 +273,8 @@ class BillSharingService {
       for (final creditorId in debtMatrix[debtorId]!.keys) {
         final amount = debtMatrix[debtorId]![creditorId]!;
         if (amount > 0.01) { // Ignoriere sehr kleine Beträge
-          final debtor = _findPersonById(debtorId);
-          final creditor = _findPersonById(creditorId);
+          final debtor = await _findPersonById(debtorId);
+          final creditor = await _findPersonById(creditorId);
           
           if (debtor != null && creditor != null) {
             allDebts.add(Debt(
@@ -321,9 +291,16 @@ class BillSharingService {
     return allDebts;
   }
 
-  Person? _findPersonById(String id) {
-    if (id == _currentUser.id) return _currentUser;
-    return _friends.firstWhere((friend) => friend.id == id);
+  Future<Person?> _findPersonById(String id) async {
+    final currentUser = await _userService.getCurrentUser();
+    if (id == currentUser.id) return currentUser;
+    
+    final friends = await _userService.getAllFriends();
+    try {
+      return friends.firstWhere((friend) => friend.id == id);
+    } catch (e) {
+      return null;
+    }
   }
 
   List<SharedBill> _getBillsInvolvingPersons(Person person1, Person person2) {
@@ -334,12 +311,8 @@ class BillSharingService {
   }
 
   /// Sucht Freunde nach Namen
-  List<Person> searchFriends(String query) {
-    final lowerQuery = query.toLowerCase();
-    return _friends.where((friend) =>
-      friend.name.toLowerCase().contains(lowerQuery) ||
-      (friend.email?.toLowerCase().contains(lowerQuery) ?? false)
-    ).toList();
+  Future<List<Person>> searchFriends(String query) async {
+    return await _userService.searchFriends(query);
   }
 
   /// Gibt Rechnungen für einen bestimmten Event zurück

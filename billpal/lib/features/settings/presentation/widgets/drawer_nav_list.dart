@@ -18,6 +18,11 @@ class DrawerNavList extends StatelessWidget {
           route: '/bills',
         ),
         _NavTile(icon: Icons.history, label: 'Historie', route: '/history'),
+        _NavTile(
+          icon: Icons.people_outlined,
+          label: 'Meine Freunde',
+          route: '/friends',
+        ),
         const Divider(height: 32),
       ],
     );

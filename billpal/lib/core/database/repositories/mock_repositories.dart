@@ -59,6 +59,61 @@ class MockBillRepository {
   }
 }
 
+/// Mock-Repository für User/Personen
+class MockUserRepository {
+  static final List<Map<String, dynamic>> _users = [];
+  static int _nextId = 1;
+
+  Future<int> insert(Map<String, dynamic> user) async {
+    print('🌐 MockUserRepository.insert: $user');
+    
+    final userWithId = Map<String, dynamic>.from(user);
+    userWithId['id'] = _nextId++;
+    _users.add(userWithId);
+    
+    print('🌐 Mock User gespeichert mit ID: ${userWithId['id']}');
+    return userWithId['id'] as int;
+  }
+
+  Future<List<Map<String, dynamic>>> getAll() async {
+    return List.from(_users);
+  }
+
+  Future<Map<String, dynamic>?> getById(int id) async {
+    try {
+      return _users.firstWhere((user) => user['id'] == id);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  Future<int> update(Map<String, dynamic> user) async {
+    final index = _users.indexWhere((u) => u['id'] == user['id']);
+    if (index != -1) {
+      _users[index] = user;
+      return 1;
+    }
+    return 0;
+  }
+
+  Future<int> delete(int id) async {
+    final index = _users.indexWhere((user) => user['id'] == id);
+    if (index != -1) {
+      _users.removeAt(index);
+      return 1;
+    }
+    return 0;
+  }
+
+  Future<Map<String, dynamic>?> getUserByEmail(String email) async {
+    try {
+      return _users.firstWhere((user) => user['email'] == email);
+    } catch (e) {
+      return null;
+    }
+  }
+}
+
 /// Mock-Repository für Positionen
 class MockPositionRepository {
   static final List<Map<String, dynamic>> _positions = [];

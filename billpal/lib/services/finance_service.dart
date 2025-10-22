@@ -12,9 +12,9 @@ class BillSharingAnalyticsService {
   final BillSharingService _billService = BillSharingService();
 
   /// Erstellt die Dashboard-Übersicht
-  BillSharingSummary getDashboardSummary() {
-    final currentUser = _billService.getCurrentUser();
-    final allDebts = _billService.calculateAllDebts();
+  Future<BillSharingSummary> getDashboardSummary() async {
+    final currentUser = await _billService.getCurrentUser();
+    final allDebts = await _billService.calculateAllDebts();
     
     // Was ich anderen schulde
     final myDebts = allDebts.where((debt) => debt.debtor.id == currentUser.id).toList();
@@ -38,8 +38,8 @@ class BillSharingAnalyticsService {
   }
 
   /// Erstellt die Summary Cards für das Dashboard
-  List<SummaryCard> getSummaryCards() {
-    final summary = getDashboardSummary();
+  Future<List<SummaryCard>> getSummaryCards() async {
+    final summary = await getDashboardSummary();
     
     return [
       SummaryCard(
@@ -204,12 +204,12 @@ class BillSharingAnalyticsService {
         .toList();
   }
 
-  /// Gibt Freundschafts-Statistiken zurück
-  List<FriendStats> getFriendStats() {
-    final currentUser = _billService.getCurrentUser();
-    final friends = _billService.getAllFriends();
+  /// Analysiert Freundschaften (geteilte Ausgaben pro Freund)
+  Future<List<FriendStats>> analyzeFriendships() async {
+    final currentUser = await _billService.getCurrentUser();
+    final friends = await _billService.getAllFriends();
     final bills = _billService.getAllSharedBills();
-    final allDebts = _billService.calculateAllDebts();
+    final allDebts = await _billService.calculateAllDebts();
     
     return friends.map((friend) {
       // Berechne geteilte Rechnungen mit diesem Freund
@@ -246,8 +246,8 @@ class BillSharingAnalyticsService {
   }
 
   /// Berechnet den "Fairness-Score" einer Gruppe
-  double calculateGroupFairness() {
-    final allDebts = _billService.calculateAllDebts();
+  Future<double> calculateGroupFairness() async {
+    final allDebts = await _billService.calculateAllDebts();
     if (allDebts.isEmpty) return 1.0;
     
     final amounts = allDebts.map((debt) => debt.amount).toList();

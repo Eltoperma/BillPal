@@ -50,12 +50,12 @@ class DashboardController {
 
   /// Initiales Laden (Demo-Daten + Analytics).
   Future<DashboardState> load() async {
-    // Demo-Daten initialisieren (heute synchron; später evtl. async)
-    bills.initializeDemoData();
+    // Demo-Daten initialisieren (jetzt async)
+    await bills.initializeDemoData();
 
-    // Daten holen (heute synchron)
-    final summary = analytics.getDashboardSummary();
-    final cards = analytics.getSummaryCards();
+    // Daten holen (jetzt async)
+    final summary = await analytics.getDashboardSummary();
+    final cards = await analytics.getSummaryCards();
     final pie = analytics.getExpensePieSlices();
     final suggestions = analytics.getEventSuggestions();
 

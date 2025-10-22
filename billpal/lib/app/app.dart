@@ -1,5 +1,6 @@
 import 'package:billpal/core/theme/app_theme.dart';
 import 'package:billpal/features/dashboard/presentation/pages/dashboard_page.dart';
+import 'package:billpal/features/friends/presentation/pages/friends_management_page.dart';
 import 'package:billpal/core/theme/theme_controller.dart';
 import 'package:billpal/l10n/locale_controller.dart';
 import 'package:flutter/material.dart';
@@ -42,6 +43,7 @@ class BillPalApp extends StatelessWidget {
                   themeController: themeController,
                   localeController: localeController,
                 ),
+            '/friends': (_) => const FriendsManagementPage(),
           //  '/bills': (_) => const BillsPage(),
           //  '/history': (_) => const HistoryPage(),
           },
