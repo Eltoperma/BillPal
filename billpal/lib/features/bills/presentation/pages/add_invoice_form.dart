@@ -5,8 +5,6 @@ import 'package:billpal/shared/application/services.dart';
 import '../../bill_service.dart';
 import '../../../../core/logging/app_logger.dart';
 
-// TODO: [CLEANUP] Vereinfachtes Person-Model entfernt - nutze jetzt zentrales Model
-
 class LineItem {
   String description;
   double? amount;
@@ -90,6 +88,36 @@ class _AddInvoiceFormState extends State<AddInvoiceForm> {
   void dispose() {
     _titleCtrl.dispose();
     super.dispose();
+  }
+
+  /// Sichere Konvertierung der User-ID zu int - kritischer Fix für Demo-Mode
+  int _getUserIdSafely(String userId) {
+    // Demo-Mode User IDs sicher zu int konvertieren
+    switch (userId) {
+      case 'user_me':
+      case 'current_user':
+        return 1; // App-User ist immer ID 1
+      case 'friend_1':
+        return 2;
+      case 'friend_2':
+        return 3;
+      case 'friend_3':
+        return 4;
+      case 'friend_4':
+        return 5;
+      case 'friend_5':
+        return 6;
+      case 'friend_6':
+        return 7;
+      default:
+        // Versuche int.parse, fallback zu 1 bei Fehlern
+        try {
+          return int.parse(userId);
+        } catch (e) {
+          AppLogger.bills.warning('⚠️ User-ID "$userId" nicht parsebar, verwende Fallback ID 1');
+          return 1;
+        }
+    }
   }
 
   Future<void> _pickDateTime() async {
@@ -202,7 +230,7 @@ class _AddInvoiceFormState extends State<AddInvoiceForm> {
       final billId = await billService.saveInvoiceData(
         title: _titleCtrl.text.trim(),
         dateTime: _dateTime,
-        userId: currentUser.id == 'user_me' ? 1 : int.parse(currentUser.id), // TODO: [CLEANUP] Echte User ID
+        userId: _getUserIdSafely(currentUser.id),
         lineItems: lineItemsData,
       );
 
