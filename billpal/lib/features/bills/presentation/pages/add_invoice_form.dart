@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:billpal/models/invoice.dart'; // Verwende zentrales Person-Model
+import 'package:billpal/services/user_service.dart'; // Für echte Freunde-Verwaltung
 import '../../bill_service.dart';
 
-// --- simple models just for the form (kannst du später in domain/models ziehen) ---
-class Person {
-  final String id;
-  final String name;
-  const Person({required this.id, required this.name});
-}
+// TODO: [CLEANUP] Vereinfachtes Person-Model entfernt - nutze jetzt zentrales Model
 
 class LineItem {
   String description;
@@ -455,18 +452,20 @@ class _LineItemRowState extends State<_LineItemRow> {
             const SizedBox(width: 8),
             Expanded(
               flex: 3,
-              child: DropdownButtonFormField<Person>(
-                initialValue: _assignee,
-                items: widget.people
-                    .map((p) => DropdownMenuItem(value: p, child: Text(p.name)))
-                    .toList(),
-                onChanged: (p) {
-                  setState(() => _assignee = p);
-                  _emit();
-                },
-                decoration: const InputDecoration(labelText: 'Person'),
-                validator: (v) => v == null ? 'Bitte wählen' : null,
-              ),
+              child: widget.people.isEmpty 
+                  ? _buildAddFriendButton() 
+                  : DropdownButtonFormField<Person>(
+                      initialValue: _assignee,
+                      items: widget.people
+                          .map((p) => DropdownMenuItem(value: p, child: Text(p.name)))
+                          .toList(),
+                      onChanged: (p) {
+                        setState(() => _assignee = p);
+                        _emit();
+                      },
+                      decoration: const InputDecoration(labelText: 'Person'),
+                      validator: (v) => v == null ? 'Bitte wählen' : null,
+                    ),
             ),
             if (widget.onRemove != null) ...[
               const SizedBox(width: 8),
@@ -480,5 +479,74 @@ class _LineItemRowState extends State<_LineItemRow> {
         ),
       ),
     );
+  }
+
+  Widget _buildAddFriendButton() {
+    return OutlinedButton.icon(
+      onPressed: () => _showAddFriendQuickDialog(),
+      icon: Icon(Icons.person_add, size: 16),
+      label: Text('Freund hinzufügen'),
+      style: OutlinedButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      ),
+    );
+  }
+
+  Future<void> _showAddFriendQuickDialog() async {
+    final userService = UserService();
+    
+    final result = await showDialog<Person>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Schnell Freund hinzufügen'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('Du hast noch keine Freunde hinzugefügt.'),
+            const SizedBox(height: 16),
+            TextFormField(
+              decoration: InputDecoration(
+                labelText: 'Name des Freundes',
+                border: OutlineInputBorder(),
+              ),
+              onFieldSubmitted: (name) async {
+                if (name.trim().isNotEmpty) {
+                  try {
+                    final newFriend = await userService.addFriend(name: name.trim());
+                    Navigator.pop(context, newFriend);
+                  } catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Fehler: $e')),
+                    );
+                  }
+                }
+              },
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Abbrechen'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              // Navigate to full friends management
+              Navigator.pop(context);
+              Navigator.pushNamed(context, '/friends');
+            },
+            child: Text('Freunde verwalten'),
+          ),
+        ],
+      ),
+    );
+    
+    if (result != null) {
+      // Refresh parent widget to show new friend
+      // (This is a quick solution - in real app you'd use state management)
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('${result.name} wurde hinzugefügt! Bitte Form neu öffnen.')),
+      );
+    }
   }
 }

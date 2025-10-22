@@ -1,4 +1,3 @@
-import 'package:billpal/features/bills/presentation/pages/add_invoice_form.dart';
 import 'package:billpal/features/bills/presentation/entrypoint/add_invoice_entrypoint.dart';
 import 'package:billpal/features/dashboard/application/dashboard_controller.dart';
 import 'package:billpal/features/dashboard/presentation/widgets/debts_list.dart';
@@ -8,6 +7,7 @@ import 'package:billpal/features/dashboard/presentation/widgets/summary_cards.da
 import 'package:billpal/features/friends/presentation/widgets/friends_preview_card.dart';
 import 'package:billpal/features/settings/presentation/widgets/app_drawer.dart';
 import 'package:billpal/l10n/locale_controller.dart';
+import 'package:billpal/models/invoice.dart'; // Für Person-Model
 import 'package:billpal/services/finance_service.dart';
 import 'package:billpal/services/invoice_service.dart';
 import 'package:billpal/core/theme/theme_controller.dart';
@@ -147,12 +147,13 @@ class _DashboardPageState extends State<DashboardPage> {
       ),
 
       // Button: Rechnung teilen (hinzufügen)
-      floatingActionButton: AddInvoiceEntryButton(
-        people: const [
-          Person(id: 'tom', name: 'Tom'),
-          Person(id: 'sue', name: 'Sue'),
-          Person(id: 'max', name: 'Max'),
-        ],
+      // TODO: [CLEANUP] Nach Branch-Cleanup echte Freunde-Liste übergeben
+      floatingActionButton: FutureBuilder<List<Person>>(
+        future: BillSharingService().getAllFriends(),
+        builder: (context, snapshot) {
+          final people = snapshot.data ?? [];
+          return AddInvoiceEntryButton(people: people);
+        },
       ),
     );
   }
