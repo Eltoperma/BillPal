@@ -56,7 +56,7 @@ class DashboardController {
     // Daten holen (jetzt async)
     final summary = await analytics.getDashboardSummary();
     final cards = await analytics.getSummaryCards();
-    final pie = analytics.getExpensePieSlices();
+    final pie = await analytics.getExpensePieSlices(); // Jetzt async!
     final suggestions = analytics.getEventSuggestions();
 
     return DashboardState(

@@ -6,7 +6,7 @@ import 'package:billpal/core/database/repositories/mock_repositories.dart';
 /// 
 /// TODO: [CLEANUP] Nach vollständiger UI-Implementierung entfernen
 /// und direkt auf Real-Mode umstellen (Ende dieses Branches)
-class AppModeService {
+class AppModeService extends ChangeNotifier {
   static final AppModeService _instance = AppModeService._internal();
   factory AppModeService() => _instance;
   AppModeService._internal() {
@@ -48,15 +48,25 @@ class AppModeService {
   Future<void> switchToRealMode() async {
     print('🔄 AppMode: Wechsel von ${_currentMode.name} zu Real-Mode');
     _currentMode = AppMode.real;
+    notifyListeners(); // UI-Refresh auslösen
     
     // TODO: [CLEANUP] Preference-Storage entfernen wenn nicht mehr nötig
     // Hier könnte später SharedPreferences gespeichert werden
+  }
+
+  /// Debug-Funktion: Manueller Wechsel zu Real-Mode
+  /// TODO: [CLEANUP] Entfernen nach Testing
+  Future<void> forceRealMode() async {
+    print('🔧 DEBUG: Force Real-Mode aktiviert');
+    _currentMode = AppMode.real;
+    notifyListeners(); // UI-Refresh auslösen
   }
 
   /// Manueller Wechsel zu Demo-Mode (für Testing/Development)
   Future<void> switchToDemoMode() async {
     print('🔄 AppMode: Wechsel von ${_currentMode.name} zu Demo-Mode');
     _currentMode = AppMode.demo;
+    notifyListeners(); // UI-Refresh auslösen
   }
 
   /// Reset für Testing

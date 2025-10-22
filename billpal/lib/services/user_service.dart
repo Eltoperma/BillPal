@@ -44,8 +44,8 @@ class UserService {
           id: userData['id'].toString(),
           name: userData['name'] ?? 'Unbekannt',
           email: userData['email'],
-          phone: userData['phone'],
-          createdAt: DateTime.parse(userData['created_at'] ?? DateTime.now().toIso8601String()),
+          phone: userData['mobile'], // SQLite verwendet 'mobile' nicht 'phone'
+          createdAt: DateTime.now(), // SQLite hat kein created_at Feld
         )).toList();
       } catch (e) {
         print('⚠️ UserService: Fehler beim Laden der Real-Freunde: $e');
@@ -80,8 +80,7 @@ class UserService {
         final userData = {
           'name': name,
           'email': email,
-          'phone': phone,
-          'created_at': DateTime.now().toIso8601String(),
+          'mobile': phone, // SQLite verwendet 'mobile' nicht 'phone'
         };
         final id = await _userRepo.insert(userData);
         return newFriend.copyWith(id: id.toString());

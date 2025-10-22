@@ -11,25 +11,25 @@ class BillSharingAnalyticsService {
 
   final BillSharingService _billService = BillSharingService();
 
-  /// Erstellt die Dashboard-Übersicht
+  /// Generiert eine Zusammenfassung aller geteilten Rechnungen
   Future<BillSharingSummary> getDashboardSummary() async {
-    final currentUser = await _billService.getCurrentUser();
-    final allDebts = await _billService.calculateAllDebts();
+    final debts = await _billService.calculateAllDebts();
+    final currentUser = await _billService.getCurrentUser(); // Einmal abrufen
     
-    // Was ich anderen schulde
-    final myDebts = allDebts.where((debt) => debt.debtor.id == currentUser.id).toList();
+    final myDebts = debts.where((debt) => debt.debtor.id == currentUser.id).toList();
+    final myCredits = debts.where((debt) => debt.creditor.id == currentUser.id).toList();
+    
     final totalOwed = myDebts.fold<double>(0, (sum, debt) => sum + debt.amount);
-    
-    // Was andere mir schulden
-    final myCredits = allDebts.where((debt) => debt.creditor.id == currentUser.id).toList();
     final totalOwedToMe = myCredits.fold<double>(0, (sum, debt) => sum + debt.amount);
+    
+    final allBills = await _billService.getAllSharedBills(); // Jetzt async!
     
     return BillSharingSummary(
       totalOwed: totalOwed,
       totalOwedToMe: totalOwedToMe,
       myDebts: myDebts,
       myCredits: myCredits,
-      recentBills: _billService.getAllSharedBills()
+      recentBills: allBills
           .where((bill) => bill.status != BillStatus.cancelled)
           .toList()
         ..sort((a, b) => b.date.compareTo(a.date)),
@@ -108,9 +108,10 @@ class BillSharingAnalyticsService {
     return from.add(Duration(days: daysUntilFriday == 0 ? 7 : daysUntilFriday));
   }
 
-  /// Erstellt Ausgaben-Kategorien für das Kreisdiagramm
-  List<ExpenseCategory> getExpenseCategories() {
-    final bills = _billService.getAllSharedBills()
+    /// Erstellt Ausgabenkategorien basierend auf den geteilten Rechnungen
+  Future<List<ExpenseCategory>> getExpenseCategories() async {
+    final allBills = await _billService.getAllSharedBills(); // Jetzt async!
+    final bills = allBills
         .where((bill) => bill.status != BillStatus.cancelled)
         .toList();
     
@@ -130,11 +131,12 @@ class BillSharingAnalyticsService {
     }
     
     final categoryColors = {
-      'Restaurant & Essen': Colors.orange.shade600,
-      'Unterhaltung': Colors.purple.shade600,
-      'Transport': Colors.blue.shade600,
-      'Einkaufen': Colors.green.shade600,
-      'Sonstiges': Colors.grey.shade600,
+      'Restaurant & Essen': Colors.orange.shade600,     // 🍕 Orange
+      'Unterhaltung': Colors.purple.shade600,          // 🎬 Lila  
+      'Transport': Colors.blue.shade600,               // 🚗 Blau
+      'Einkaufen': Colors.green.shade600,              // 🛒 Grün
+      'Wohnen & Fixkosten': Colors.red.shade600,       // 🏠 Rot
+      'Sonstiges': Colors.grey.shade600,               // ❓ Grau
     };
     
     return categoryTotals.entries
@@ -153,42 +155,148 @@ class BillSharingAnalyticsService {
   String _categorizeByTitle(String title) {
     final lowerTitle = title.toLowerCase();
     
+    // 🍕 Restaurant & Essen - Moderner und alltagstauglicher
     if (lowerTitle.contains('restaurant') || 
         lowerTitle.contains('pizza') || 
+        lowerTitle.contains('döner') ||
+        lowerTitle.contains('kebab') ||
+        lowerTitle.contains('burger') ||
+        lowerTitle.contains('mcdonalds') ||
+        lowerTitle.contains('kfc') ||
+        lowerTitle.contains('subway') ||
+        lowerTitle.contains('sushi') ||
         lowerTitle.contains('café') ||
+        lowerTitle.contains('coffee') ||
+        lowerTitle.contains('starbucks') ||
         lowerTitle.contains('bar') ||
         lowerTitle.contains('essen') ||
-        lowerTitle.contains('tante emma')) {
+        lowerTitle.contains('food') ||
+        lowerTitle.contains('meal') ||
+        lowerTitle.contains('lunch') ||
+        lowerTitle.contains('dinner') ||
+        lowerTitle.contains('breakfast') ||
+        lowerTitle.contains('frühstück') ||
+        lowerTitle.contains('mittagessen') ||
+        lowerTitle.contains('abendessen') ||
+        lowerTitle.contains('bäcker') ||
+        lowerTitle.contains('metzger') ||
+        lowerTitle.contains('imbiss') ||
+        lowerTitle.contains('bistro') ||
+        lowerTitle.contains('lieferando') ||
+        lowerTitle.contains('delivery') ||
+        lowerTitle.contains('takeaway') ||
+        lowerTitle.contains('getränk') ||
+        lowerTitle.contains('drink') ||
+        lowerTitle.contains('bier') ||
+        lowerTitle.contains('wine') ||
+        lowerTitle.contains('wein') ||
+        lowerTitle.contains('cocktail')) {
       return 'Restaurant & Essen';
     }
     
-    if (lowerTitle.contains('bowling') || 
-        lowerTitle.contains('kino') || 
-        lowerTitle.contains('bar') ||
-        lowerTitle.contains('party')) {
+    // 🎬 Unterhaltung & Freizeit
+    if (lowerTitle.contains('kino') || 
+        lowerTitle.contains('cinema') ||
+        lowerTitle.contains('movie') ||
+        lowerTitle.contains('film') ||
+        lowerTitle.contains('bowling') || 
+        lowerTitle.contains('party') ||
+        lowerTitle.contains('club') ||
+        lowerTitle.contains('disco') ||
+        lowerTitle.contains('concert') ||
+        lowerTitle.contains('konzert') ||
+        lowerTitle.contains('theater') ||
+        lowerTitle.contains('museum') ||
+        lowerTitle.contains('zoo') ||
+        lowerTitle.contains('park') ||
+        lowerTitle.contains('festival') ||
+        lowerTitle.contains('event') ||
+        lowerTitle.contains('ticket') ||
+        lowerTitle.contains('netflix') ||
+        lowerTitle.contains('spotify') ||
+        lowerTitle.contains('game') ||
+        lowerTitle.contains('spiel')) {
       return 'Unterhaltung';
     }
     
+    // 🚗 Transport & Mobilität
     if (lowerTitle.contains('tankstelle') || 
+        lowerTitle.contains('tanken') ||
+        lowerTitle.contains('benzin') ||
+        lowerTitle.contains('diesel') ||
         lowerTitle.contains('uber') || 
         lowerTitle.contains('taxi') ||
+        lowerTitle.contains('bolt') ||
         lowerTitle.contains('bus') ||
-        lowerTitle.contains('bahn')) {
+        lowerTitle.contains('bahn') ||
+        lowerTitle.contains('zug') ||
+        lowerTitle.contains('train') ||
+        lowerTitle.contains('ticket') ||
+        lowerTitle.contains('fahrkarte') ||
+        lowerTitle.contains('transport') ||
+        lowerTitle.contains('parking') ||
+        lowerTitle.contains('parken') ||
+        lowerTitle.contains('maut') ||
+        lowerTitle.contains('toll') ||
+        lowerTitle.contains('car') ||
+        lowerTitle.contains('auto')) {
       return 'Transport';
     }
     
+    // 🛒 Einkaufen & Shopping
     if (lowerTitle.contains('supermarkt') || 
         lowerTitle.contains('einkauf') || 
-        lowerTitle.contains('drogerie')) {
+        lowerTitle.contains('shopping') ||
+        lowerTitle.contains('rewe') ||
+        lowerTitle.contains('edeka') ||
+        lowerTitle.contains('aldi') ||
+        lowerTitle.contains('lidl') ||
+        lowerTitle.contains('penny') ||
+        lowerTitle.contains('netto') ||
+        lowerTitle.contains('kaufland') ||
+        lowerTitle.contains('real') ||
+        lowerTitle.contains('drogerie') ||
+        lowerTitle.contains('dm') ||
+        lowerTitle.contains('rossmann') ||
+        lowerTitle.contains('müller') ||
+        lowerTitle.contains('amazon') ||
+        lowerTitle.contains('zalando') ||
+        lowerTitle.contains('h&m') ||
+        lowerTitle.contains('zara') ||
+        lowerTitle.contains('ikea') ||
+        lowerTitle.contains('saturn') ||
+        lowerTitle.contains('mediamarkt') ||
+        lowerTitle.contains('apotheke') ||
+        lowerTitle.contains('pharmacy')) {
       return 'Einkaufen';
+    }
+    
+    // 🏠 Wohnen & Haushalt
+    if (lowerTitle.contains('miete') ||
+        lowerTitle.contains('rent') ||
+        lowerTitle.contains('nebenkosten') ||
+        lowerTitle.contains('strom') ||
+        lowerTitle.contains('gas') ||
+        lowerTitle.contains('wasser') ||
+        lowerTitle.contains('heizung') ||
+        lowerTitle.contains('internet') ||
+        lowerTitle.contains('wifi') ||
+        lowerTitle.contains('handy') ||
+        lowerTitle.contains('mobilfunk') ||
+        lowerTitle.contains('versicherung') ||
+        lowerTitle.contains('insurance') ||
+        lowerTitle.contains('bank') ||
+        lowerTitle.contains('gebühr') ||
+        lowerTitle.contains('fee')) {
+      return 'Wohnen & Fixkosten';
     }
     
     return 'Sonstiges';
   }
 
   /// Erstellt Pie-Chart-Daten
-  List<PieSlice> getExpensePieSlices() {
-    final categories = getExpenseCategories();
+  Future<List<PieSlice>> getExpensePieSlices() async {
+    final categories = await getExpenseCategories(); // Jetzt async!
     final total = categories.fold<double>(0, (sum, cat) => sum + cat.amount);
     
     if (total == 0) return [];
@@ -204,11 +312,11 @@ class BillSharingAnalyticsService {
         .toList();
   }
 
-  /// Analysiert Freundschaften (geteilte Ausgaben pro Freund)
-  Future<List<FriendStats>> analyzeFriendships() async {
+  /// Generiert Freundschafts-Statistiken
+  Future<List<FriendStats>> getFriendStats() async {
     final currentUser = await _billService.getCurrentUser();
     final friends = await _billService.getAllFriends();
-    final bills = _billService.getAllSharedBills();
+    final bills = await _billService.getAllSharedBills(); // Jetzt async!
     final allDebts = await _billService.calculateAllDebts();
     
     return friends.map((friend) {

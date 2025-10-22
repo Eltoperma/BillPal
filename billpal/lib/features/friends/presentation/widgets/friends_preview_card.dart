@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:billpal/models/invoice.dart';
 import 'package:billpal/services/user_service.dart';
+import 'package:billpal/core/app_mode/app_mode_service.dart';
 import 'package:billpal/features/friends/presentation/pages/friends_management_page.dart';
 
 /// Collapsible Friends Card für das Dashboard
@@ -21,6 +22,22 @@ class _FriendsPreviewCardState extends State<FriendsPreviewCard> {
   @override
   void initState() {
     super.initState();
+    
+    // Listener für Mode-Changes
+    AppModeService().addListener(_onModeChanged);
+    
+    _loadFriends();
+  }
+
+  @override
+  void dispose() {
+    AppModeService().removeListener(_onModeChanged);
+    super.dispose();
+  }
+
+  /// Callback bei Mode-Wechsel - lädt Freunde neu
+  void _onModeChanged() {
+    print('🔄 FriendsPreviewCard: Mode gewechselt zu ${AppModeService().currentMode.name} - Reload');
     _loadFriends();
   }
 
