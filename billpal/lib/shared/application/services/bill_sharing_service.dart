@@ -465,8 +465,10 @@ class BillSharingService {
       }
       
       AppLogger.bills.debug('💰 Verarbeite Rechnung: "${bill.title}"');
-      final debts = bill.getDebts();
-      AppLogger.bills.debug('💰   -> ${debts.length} Schulden gefunden');
+      
+      // WICHTIG: Verwende Settlement-basierte Schulden-Berechnung für SQLite-Bills
+      final debts = await getOpenDebtsForBill(bill.id);
+      AppLogger.bills.debug('💰   -> ${debts.length} offene Schulden gefunden');
       
       for (final entry in debts.entries) {
         final debtorId = entry.key.id;
@@ -584,9 +586,10 @@ class BillSharingService {
     }
   }
 
-  /// Aktualisiert den Settlement-Status einer Position
+  /// Aktualisiert den Settlement-Status einer Position und prüft Bill-Status
   Future<void> updatePositionSettlement(int positionId, bool isSettled) async {
     try {
+      // Erst die Position aktualisieren
       final rowsUpdated = await _positionRepo.updatePositionSettlement(
         positionId: positionId, 
         isSettled: isSettled
@@ -594,12 +597,109 @@ class BillSharingService {
       
       if (rowsUpdated > 0) {
         AppLogger.bills.success('✅ Position $positionId Settlement-Status aktualisiert: ${isSettled ? "beglichen" : "offen"}');
+        
+        // Dann prüfen ob die gesamte Bill jetzt beglichen ist
+        await _checkAndUpdateBillSettlementStatus(positionId);
+        
       } else {
         AppLogger.bills.warning('⚠️ Position $positionId nicht gefunden');
       }
     } catch (e) {
       AppLogger.bills.error('Fehler beim Aktualisieren des Settlement-Status: $e');
       rethrow;
+    }
+  }
+
+  /// Prüft ob eine Bill vollständig beglichen ist und aktualisiert den Status
+  Future<void> _checkAndUpdateBillSettlementStatus(int positionId) async {
+    try {
+      // Finde die Bill-ID für diese Position
+      final position = await _positionRepo.getById(positionId);
+      if (position == null) return;
+      
+      final billId = position['bill_id'] as int;
+      
+      // Lade alle Positionen dieser Bill
+      final allPositions = await _positionRepo.getPositionsByBillId(billId);
+      
+      // Prüfe ob alle Positionen beglichen sind (open = 0)
+      final openPositions = allPositions.where((pos) => pos['open'] == 1).toList();
+      final settledPositions = allPositions.where((pos) => pos['open'] == 0).toList();
+      
+      AppLogger.bills.debug('🔍 Bill $billId Status-Check: ${settledPositions.length} beglichen, ${openPositions.length} offen');
+      
+      if (openPositions.isEmpty && settledPositions.isNotEmpty) {
+        // Alle Positionen sind beglichen!
+        AppLogger.bills.success('🎉 Bill $billId ist vollständig beglichen! Status wird aktualisiert.');
+        
+        // TODO: Bill-Status in Datenbank aktualisieren (falls Bills-Tabelle erweitert wird)
+        // Für jetzt: Nur loggen
+        
+        // In-Memory Bills aktualisieren
+        await _updateInMemoryBillStatus(billId.toString(), BillStatus.settled);
+        
+      } else if (settledPositions.isNotEmpty && openPositions.isNotEmpty) {
+        // Teilweise beglichen
+        AppLogger.bills.info('📊 Bill $billId ist teilweise beglichen');
+        await _updateInMemoryBillStatus(billId.toString(), BillStatus.shared); // Bleibt "shared" (teilweise)
+      }
+      
+    } catch (e) {
+      AppLogger.bills.error('Fehler beim Prüfen des Bill-Settlement-Status: $e');
+    }
+  }
+
+  /// Aktualisiert den Status einer Bill in den In-Memory Listen
+  Future<void> _updateInMemoryBillStatus(String billId, BillStatus newStatus) async {
+    try {
+      // Suche in den geladenen Bills
+      final allBills = await getAllSharedBills();
+      final billIndex = allBills.indexWhere((bill) => bill.id == billId);
+      
+      if (billIndex != -1) {
+        // Status-Update wird beim nächsten Laden automatisch aus der DB gelesen
+        AppLogger.bills.success('✅ Bill "$billId" Status wird beim nächsten Laden aktualisiert: ${newStatus.displayName}');
+      }
+    } catch (e) {
+      AppLogger.bills.error('Fehler beim Aktualisieren des In-Memory Bill-Status: $e');
+    }
+  }
+
+  /// Berechnet offene Schulden für eine Bill unter Berücksichtigung des Settlement-Status
+  Future<Map<Person, double>> getOpenDebtsForBill(String billId) async {
+    try {
+      final billIdInt = int.tryParse(billId);
+      if (billIdInt == null) {
+        // Demo-Bill: Verwende Standard-Schulden-Berechnung
+        final allBills = await getAllSharedBills();
+        final bill = allBills.firstWhere((b) => b.id == billId);
+        return bill.getDebts(); // Alle Items sind offen in Demo-Mode
+      }
+
+      // SQLite-Bill: Nur offene Positionen berücksichtigen
+      final openPositions = await _positionRepo.getPositionsByBillId(billIdInt);
+      final onlyOpenPositions = openPositions.where((pos) => pos['open'] == 1).toList();
+      
+      AppLogger.bills.debug('💰 Offene Schulden-Berechnung für Bill $billId: ${onlyOpenPositions.length} offene Positionen');
+      
+      final debts = <Person, double>{};
+      final currentUser = await getCurrentUser();
+      
+      for (final pos in onlyOpenPositions) {
+        final assignedUser = await _userService.getUserById(pos['user_id']);
+        final amount = (pos['amount'] as num).toDouble();
+        
+        if (assignedUser != null && assignedUser.id != currentUser.id) {
+          // Nur wenn jemand anderes zugeordnet ist (nicht der App-User selbst)
+          debts[assignedUser] = (debts[assignedUser] ?? 0.0) + amount;
+          AppLogger.bills.debug('💸 ${assignedUser.name} schuldet ${amount}€ für "${pos['desc']}"');
+        }
+      }
+      
+      return debts;
+    } catch (e) {
+      AppLogger.bills.error('Fehler beim Berechnen der offenen Schulden: $e');
+      return {};
     }
   }
 }
