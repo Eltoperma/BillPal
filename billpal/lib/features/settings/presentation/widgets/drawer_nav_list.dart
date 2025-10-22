@@ -12,11 +12,6 @@ class DrawerNavList extends StatelessWidget {
           label: 'Dashboard',
           route: '/',
         ),
-        _NavTile(
-          icon: Icons.receipt_long_outlined,
-          label: 'Meine Rechnungen',
-          route: '/bills',
-        ),
         _NavTile(icon: Icons.history, label: 'Historie', route: '/history'),
         _NavTile(
           icon: Icons.people_outlined,
