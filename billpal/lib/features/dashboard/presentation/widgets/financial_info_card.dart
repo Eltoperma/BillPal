@@ -12,7 +12,9 @@ class BillSharingCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return GestureDetector(
+      onTap: () => _navigateToHistory(context),
+      child: Container(
       constraints: const BoxConstraints(minHeight: 100),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -105,6 +107,26 @@ class BillSharingCard extends StatelessWidget {
           ),
         ],
       ),
+    ),
+    );
+  }
+
+  void _navigateToHistory(BuildContext context) {
+    String? filterBy;
+    
+    // Bestimme Filter basierend auf Kartentitel
+    if (card.title.contains('Du schuldest')) {
+      filterBy = 'i_owe';
+    } else if (card.title.contains('Dir wird geschuldet')) {
+      filterBy = 'owed_to_me';
+    }
+    
+    Navigator.pushNamed(
+      context,
+      '/history',
+      arguments: {
+        'filterBy': filterBy,
+      },
     );
   }
 }

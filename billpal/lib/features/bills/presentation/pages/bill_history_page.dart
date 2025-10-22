@@ -6,7 +6,14 @@ import 'package:intl/intl.dart';
 
 /// Vollständige Rechnungshistorie-Seite
 class BillHistoryPage extends StatefulWidget {
-  const BillHistoryPage({super.key});
+  final String? filterBy; // 'owed_to_me', 'i_owe', 'paid_by_me'
+  final BillStatus? statusFilter;
+  
+  const BillHistoryPage({
+    super.key,
+    this.filterBy,
+    this.statusFilter,
+  });
 
   @override
   State<BillHistoryPage> createState() => _BillHistoryPageState();
@@ -25,6 +32,12 @@ class _BillHistoryPageState extends State<BillHistoryPage> {
   @override
   void initState() {
     super.initState();
+    
+    // Setze voreingestellte Filter basierend auf Parametern
+    if (widget.statusFilter != null) {
+      _selectedStatus = widget.statusFilter;
+    }
+    
     _loadBills();
   }
 
@@ -42,6 +55,44 @@ class _BillHistoryPageState extends State<BillHistoryPage> {
     setState(() => _isLoading = false);
   }
 
+  bool _matchesSpecialFilter(SharedBill bill, String filterBy) {
+    // Verwende Name-basierten Vergleich da User-ID inkonsistent ist
+    final isMyBill = bill.paidBy.name == "Ich" || bill.paidBy.name.contains("Ich");
+    
+    switch (filterBy) {
+      case 'owed_to_me':
+        // Alle Rechnungen die ICH bezahlt habe
+        // = Dir wird geschuldet (du hast bezahlt, andere schulden dir)
+        return isMyBill;
+      
+      case 'i_owe':
+        // Alle Rechnungen die ANDERE bezahlt haben
+        // = Du schuldest (andere haben bezahlt, du schuldest ihnen)
+        return !isMyBill;
+      
+      case 'paid_by_me':
+        // Alle Rechnungen die ich bezahlt habe
+        return isMyBill;
+      
+      default:
+        return true;
+    }
+  }
+
+  String _getPageTitle() {
+    if (widget.filterBy != null) {
+      switch (widget.filterBy!) {
+        case 'owed_to_me':
+          return 'Dir wird geschuldet';
+        case 'i_owe':
+          return 'Du schuldest';
+        case 'paid_by_me':
+          return 'Von dir bezahlt';
+      }
+    }
+    return 'Rechnungshistorie';
+  }
+
   void _applyFilters() {
     _filteredBills = _allBills.where((bill) {
       // Suchfilter
@@ -56,6 +107,13 @@ class _BillHistoryPageState extends State<BillHistoryPage> {
       // Status-Filter
       if (_selectedStatus != null && bill.status != _selectedStatus) {
         return false;
+      }
+      
+      // Spezial-Filter basierend auf Dashboard-Navigation
+      if (widget.filterBy != null) {
+        if (!_matchesSpecialFilter(bill, widget.filterBy!)) {
+          return false;
+        }
       }
       
       return true;
@@ -103,7 +161,7 @@ class _BillHistoryPageState extends State<BillHistoryPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Rechnungshistorie'),
+        title: Text(_getPageTitle()),
         backgroundColor: Colors.transparent,
         elevation: 0,
         actions: [

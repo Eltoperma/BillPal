@@ -2,6 +2,7 @@ import 'package:billpal/core/theme/app_theme.dart';
 import 'package:billpal/features/dashboard/presentation/pages/dashboard_page.dart';
 import 'package:billpal/features/friends/presentation/pages/friends_management_page.dart';
 import 'package:billpal/features/bills/presentation/pages/bill_history_page.dart';
+import 'package:billpal/models/invoice.dart';
 import 'package:billpal/core/theme/theme_controller.dart';
 import 'package:billpal/l10n/locale_controller.dart';
 import 'package:flutter/material.dart';
@@ -39,13 +40,35 @@ class BillPalApp extends StatelessWidget {
           darkTheme: AppTheme.dark,
           themeMode: themeController.mode,
 
-          routes: {
-            '/': (_) => DashboardPage(
-                  themeController: themeController,
-                  localeController: localeController,
-                ),
-            '/friends': (_) => const FriendsManagementPage(),
-            '/history': (_) => const BillHistoryPage(),
+          onGenerateRoute: (settings) {
+            switch (settings.name) {
+              case '/':
+                return MaterialPageRoute(
+                  builder: (_) => DashboardPage(
+                    themeController: themeController,
+                    localeController: localeController,
+                  ),
+                );
+              case '/friends':
+                return MaterialPageRoute(
+                  builder: (_) => const FriendsManagementPage(),
+                );
+              case '/history':
+                final args = settings.arguments as Map<String, dynamic>?;
+                return MaterialPageRoute(
+                  builder: (_) => BillHistoryPage(
+                    filterBy: args?['filterBy'] as String?,
+                    statusFilter: args?['statusFilter'] as BillStatus?,
+                  ),
+                );
+              default:
+                return MaterialPageRoute(
+                  builder: (_) => DashboardPage(
+                    themeController: themeController,
+                    localeController: localeController,
+                  ),
+                );
+            }
           },
         );
       },
