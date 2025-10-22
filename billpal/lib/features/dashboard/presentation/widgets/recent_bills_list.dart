@@ -38,10 +38,7 @@ class RecentBillsList extends StatelessWidget {
               if (summary.recentBills.length > 5)
                 TextButton(
                   onPressed: () {
-                    // TODO: Navigate to full bills list
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Alle Rechnungen anzeigen - noch nicht implementiert')),
-                    );
+                    Navigator.pushNamed(context, '/history');
                   },
                   child: const Text('Alle anzeigen'),
                 ),
