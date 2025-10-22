@@ -10,9 +10,7 @@ import 'package:billpal/features/settings/presentation/widgets/app_drawer.dart';
 import 'package:billpal/l10n/locale_controller.dart';
 import 'package:billpal/shared/domain/entities.dart';
 import 'package:billpal/core/logging/app_logger.dart';
-import 'package:billpal/services/finance_service.dart';
-import 'package:billpal/services/invoice_service.dart';
-import 'package:billpal/services/user_service.dart'; // UserService für echte Freunde
+import 'package:billpal/shared/application/services.dart';
 import 'package:billpal/core/theme/theme_controller.dart';
 import 'package:billpal/core/app_mode/app_mode_service.dart';
 import 'package:flutter/material.dart';

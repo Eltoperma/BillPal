@@ -1,5 +1,5 @@
 import 'package:billpal/shared/domain/entities.dart';
-import 'package:billpal/services/invoice_service.dart';
+import 'package:billpal/shared/application/services/bill_sharing_service.dart';
 import 'package:flutter/material.dart';
 
 /// Service für Bill-Sharing Analysen und Berechnungen

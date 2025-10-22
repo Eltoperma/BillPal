@@ -5,7 +5,7 @@ import 'package:billpal/core/database/repositories/repositories.dart';
 import 'package:billpal/core/database/repositories/mock_repositories.dart';
 import 'package:billpal/core/logging/app_logger.dart';
 
-/// Zentraler Service für User/Freunde-Verwaltung
+/// Application Service für User/Freunde-Verwaltung
 /// Einheitliche Demo/Real Logik für alle Freunde-bezogenen Operationen
 /// 
 /// TODO: [CLEANUP] Nach vollständiger Migration Mock-Logik entfernen
@@ -49,90 +49,86 @@ class UserService {
           createdAt: DateTime.now(), // SQLite hat kein created_at Feld
         )).toList();
       } catch (e) {
-        AppLogger.users.error('⚠️ UserService: Fehler beim Laden der Real-Freunde: $e');
-        // Fallback auf Demo-Daten
-        return _getDemoFriends();
+        AppLogger.users.error('Fehler beim Laden der Freunde: $e');
+        return [];
       }
     }
   }
 
-  /// Freund hinzufügen
+  /// Fügt einen neuen Freund hinzu
   Future<Person> addFriend({
     required String name,
     String? email,
     String? phone,
   }) async {
     final newFriend = Person(
-      id: 'temp_${DateTime.now().millisecondsSinceEpoch}',
+      id: 'friend_${DateTime.now().millisecondsSinceEpoch}',
       name: name,
       email: email,
       phone: phone,
       createdAt: DateTime.now(),
     );
 
-    if (_appMode.isDemoMode) {
-      AppLogger.users.info('🎭 UserService.addFriend: Demo-Mode - In-Memory hinzufügen');
-      _demoFriends?.add(newFriend);
-      return newFriend;
+    if (_appMode.isDemoMode || _appMode.isUninitialized) {
+      _getDemoFriends().add(newFriend);
+      AppLogger.users.success('Demo-Freund hinzugefügt: ${newFriend.name}');
     } else {
       try {
         AppLogger.users.info('🏠 UserService.addFriend: Real-Mode - Repository-Call');
-        final friendData = {
-          'name': newFriend.name,
-          'email': newFriend.email,
-          'mobile': newFriend.phone,
-        };
-        await _userRepo.insert(friendData);
-        return newFriend;
+        await _userRepo.insert({
+          'name': name,
+          'email': email,
+          'mobile': phone,
+        });
+        AppLogger.users.success('Real-Freund hinzugefügt: $name');
       } catch (e) {
-        AppLogger.users.error('⚠️ UserService: Fehler beim Hinzufügen des Real-Freundes: $e');
-        // Fallback to demo
-        _demoFriends?.add(newFriend);
-        return newFriend;
+        AppLogger.users.error('Fehler beim Hinzufügen des Freundes: $e');
+        throw e;
       }
     }
+    
+    return newFriend;
   }
 
-  /// Freund löschen
+  /// Entfernt einen Freund
   Future<bool> removeFriend(String friendId) async {
     if (_appMode.isDemoMode || _appMode.isUninitialized) {
-      AppLogger.users.info('🎭 UserService.removeFriend: Demo-Mode - Aus Memory entfernen');
-      _demoFriends?.removeWhere((friend) => friend.id == friendId);
+      _getDemoFriends().removeWhere((friend) => friend.id == friendId);
+      AppLogger.users.success('Demo-Freund entfernt: $friendId');
       return true;
     } else {
       try {
         AppLogger.users.info('🏠 UserService.removeFriend: Real-Mode - Repository-Call');
-        final result = await _userRepo.delete(int.parse(friendId));
-        return result > 0;
+        await _userRepo.delete(int.parse(friendId));
+        AppLogger.users.success('Real-Freund entfernt: $friendId');
+        return true;
       } catch (e) {
-        AppLogger.users.error('⚠️ UserService: Fehler beim Löschen des Real-Freundes: $e');
+        AppLogger.users.error('Fehler beim Entfernen des Freundes: $e');
         return false;
       }
     }
   }
 
-  /// Freunde nach Namen suchen
+  /// Sucht Freunde nach Name
   Future<List<Person>> searchFriends(String query) async {
     final allFriends = await getAllFriends();
-    final lowerQuery = query.toLowerCase();
+    if (query.isEmpty) return allFriends;
     
     return allFriends.where((friend) =>
-      friend.name.toLowerCase().contains(lowerQuery) ||
-      (friend.email?.toLowerCase().contains(lowerQuery) ?? false)
+      friend.name.toLowerCase().contains(query.toLowerCase())
     ).toList();
   }
 
-  /// Demo-Daten: Aktueller Benutzer
+  /// Demo-Daten
   Person _getDemoCurrentUser() {
     return _demoCurrentUser ??= Person(
-      id: 'user_me',
+      id: 'current_user',
       name: 'Ich',
-      email: 'me@example.com',
+      email: 'ich@example.com',
       createdAt: DateTime.now().subtract(const Duration(days: 100)),
     );
   }
 
-  /// Demo-Daten: Freunde-Liste
   List<Person> _getDemoFriends() {
     return _demoFriends ??= _createDemoFriends();
   }

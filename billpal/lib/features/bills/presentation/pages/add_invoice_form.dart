@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:billpal/shared/domain/entities.dart';
-import 'package:billpal/services/user_service.dart'; // Für echte Freunde-Verwaltung
+import 'package:billpal/shared/application/services.dart';
 import '../../bill_service.dart';
 import '../../../../core/logging/app_logger.dart';
 
