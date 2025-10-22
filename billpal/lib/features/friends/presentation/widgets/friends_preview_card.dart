@@ -3,6 +3,7 @@ import 'package:billpal/models/invoice.dart';
 import 'package:billpal/services/user_service.dart';
 import 'package:billpal/core/app_mode/app_mode_service.dart';
 import 'package:billpal/features/friends/presentation/pages/friends_management_page.dart';
+import 'package:billpal/core/logging/app_logger.dart';
 
 /// Collapsible Friends Card für das Dashboard
 /// Zeigt eine Vorschau der Freunde mit Möglichkeit zum Erweitern
@@ -37,7 +38,7 @@ class _FriendsPreviewCardState extends State<FriendsPreviewCard> {
 
   /// Callback bei Mode-Wechsel - lädt Freunde neu
   void _onModeChanged() {
-    print('🔄 FriendsPreviewCard: Mode gewechselt zu ${AppModeService().currentMode.name} - Reload');
+    AppLogger.dashboard.info('🔄 FriendsPreviewCard: Mode gewechselt zu ${AppModeService().currentMode.name} - Reload');
     _loadFriends();
   }
 
@@ -50,7 +51,7 @@ class _FriendsPreviewCardState extends State<FriendsPreviewCard> {
         _isLoading = false;
       });
     } catch (e) {
-      print('⚠️ FriendsPreviewCard: Fehler beim Laden: $e');
+      AppLogger.dashboard.error('⚠️ FriendsPreviewCard: Fehler beim Laden: $e');
       setState(() => _isLoading = false);
     }
   }

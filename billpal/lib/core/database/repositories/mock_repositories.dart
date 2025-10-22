@@ -1,3 +1,5 @@
+import '../../logging/app_logger.dart';
+
 /// Mock-Repository für Web-Verwendung
 /// Simuliert SQLite-Verhalten im Browser
 class MockBillRepository {
@@ -5,13 +7,12 @@ class MockBillRepository {
   static int _nextId = 1;
 
   Future<int> insert(Map<String, dynamic> bill) async {
-    print('🌐 MockBillRepository.insert: $bill');
+    AppLogger.sql.debug('🌐 MockBillRepository.insert: $bill');
     
-    final billWithId = Map<String, dynamic>.from(bill);
-    billWithId['id'] = _nextId++;
+    final billWithId = {...bill, 'id': _nextId++};
     _bills.add(billWithId);
     
-    print('🌐 Mock Bill gespeichert mit ID: ${billWithId['id']}');
+    AppLogger.sql.success('🌐 Mock Bill gespeichert mit ID: ${billWithId['id']}');
     return billWithId['id'] as int;
   }
 
@@ -65,13 +66,12 @@ class MockUserRepository {
   static int _nextId = 1;
 
   Future<int> insert(Map<String, dynamic> user) async {
-    print('🌐 MockUserRepository.insert: $user');
+    AppLogger.sql.debug('🌐 MockUserRepository.insert: $user');
     
-    final userWithId = Map<String, dynamic>.from(user);
-    userWithId['id'] = _nextId++;
+    final userWithId = {...user, 'id': _nextId++};
     _users.add(userWithId);
     
-    print('🌐 Mock User gespeichert mit ID: ${userWithId['id']}');
+    AppLogger.sql.success('🌐 Mock User gespeichert mit ID: ${userWithId['id']}');
     return userWithId['id'] as int;
   }
 
@@ -120,13 +120,12 @@ class MockPositionRepository {
   static int _nextId = 1;
 
   Future<int> insert(Map<String, dynamic> position) async {
-    print('🌐 MockPositionRepository.insert: $position');
+    AppLogger.sql.debug('🌐 MockPositionRepository.insert: $position');
     
-    final positionWithId = Map<String, dynamic>.from(position);
-    positionWithId['id'] = _nextId++;
+    final positionWithId = {...position, 'id': _nextId++};
     _positions.add(positionWithId);
     
-    print('🌐 Mock Position gespeichert mit ID: ${positionWithId['id']}');
+    AppLogger.sql.success('🌐 Mock Position gespeichert mit ID: ${positionWithId['id']}');
     return positionWithId['id'] as int;
   }
 

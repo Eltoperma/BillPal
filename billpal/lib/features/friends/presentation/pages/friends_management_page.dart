@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:billpal/models/invoice.dart';
-import 'package:billpal/services/user_service.dart';
+import 'package:billpal/models/invoice.dart'; // Zentrale Person-Klasse
+import 'package:billpal/services/user_service.dart'; // Zentrale Freunde-Verwaltung
+import 'package:billpal/core/logging/app_logger.dart';
 import 'package:billpal/core/app_mode/app_mode_service.dart';
 
 class FriendsManagementPage extends StatefulWidget {
@@ -43,7 +44,7 @@ class _FriendsManagementPageState extends State<FriendsManagementPage> {
         _isLoading = false;
       });
     } catch (e) {
-      print('⚠️ FriendsPage: Fehler beim Laden der Freunde: $e');
+      AppLogger.users.error('⚠️ FriendsPage: Fehler beim Laden der Freunde: $e');
       setState(() => _isLoading = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

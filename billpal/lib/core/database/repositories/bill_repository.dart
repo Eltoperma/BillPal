@@ -1,5 +1,6 @@
 import 'package:sqflite/sqflite.dart';
 import '../database_helper.dart';
+import '../../logging/app_logger.dart';
 import 'base_repository.dart';
 
 /// Repository für Bill-Operationen basierend auf dem ERD-Schema
@@ -9,15 +10,15 @@ class BillRepository implements BaseRepository<Map<String, dynamic>> {
   @override
   Future<int> insert(Map<String, dynamic> bill) async {
     try {
-      print('🔸 BillRepository.insert aufgerufen mit: $bill');
-      final Database db = await _databaseHelper.database;
-      print('🔸 Database-Objekt erhalten: $db');
+      AppLogger.sql.debug('🔸 BillRepository.insert aufgerufen mit: $bill');
+      final db = await DatabaseHelper().database;
+      AppLogger.sql.debug('🔸 Database-Objekt erhalten: $db');
       final result = await db.insert('bills', bill);
-      print('🔸 Insert erfolgreich: $result');
+      AppLogger.sql.success('🔸 Insert erfolgreich: $result');
       return result;
     } catch (e, stackTrace) {
-      print('❌ BillRepository.insert FEHLER: $e');
-      print('📍 Repository StackTrace: $stackTrace');
+      AppLogger.sql.error('❌ BillRepository.insert FEHLER: $e');
+      AppLogger.sql.error('📍 Repository StackTrace: $stackTrace');
       rethrow;
     }
   }

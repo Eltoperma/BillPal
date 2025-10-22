@@ -3,6 +3,7 @@ import 'package:billpal/models/invoice.dart';
 import 'package:billpal/core/app_mode/app_mode_service.dart';
 import 'package:billpal/services/user_service.dart';
 import 'package:billpal/features/bills/bill_service.dart';
+import 'package:billpal/core/logging/app_logger.dart';
 
 /// Service für die Verwaltung von geteilten Rechnungen zwischen Freunden
 /// 
@@ -24,14 +25,14 @@ class BillSharingService {
     final appMode = AppModeService();
     
     if (appMode.isDemoMode || appMode.isUninitialized) {
-      print('🎭 BillSharingService: Demo-Daten werden geladen (Mode: ${appMode.currentMode.name})');
+      AppLogger.bills.info('Demo-Daten werden geladen (Mode: ${appMode.currentMode.name})');
       _sharedBills.clear();
       
       // Erstelle Demo-Rechnungen (Freunde werden vom UserService verwaltet)
       await _createDemoSharedBills();
     } else {
-      print('🏠 BillSharingService: Real-Mode aktiv - In-Memory Rechnungen beibehalten');
-      print('📊 BillSharingService: ${_sharedBills.length} Real-Mode Rechnungen gefunden');
+      AppLogger.bills.info('Real-Mode aktiv - In-Memory Rechnungen beibehalten');
+      AppLogger.bills.debug('${_sharedBills.length} Real-Mode Rechnungen gefunden');
       // TODO: [IMPLEMENTATION] Hier später echte Repository-Calls für persistente Rechnungen
       // Für jetzt: In-Memory Rechnungen auch im Real-Mode verwenden
       // _sharedBills.clear(); // NICHT löschen im Real-Mode!
@@ -197,16 +198,16 @@ class BillSharingService {
     final appMode = AppModeService();
     
     if (appMode.isRealMode) {
-      print('🏠 BillSharingService.getAllSharedBills: Real-Mode - Lade aus SQLite');
+      AppLogger.sql.info('Real-Mode - Lade aus SQLite');
       
       // Kombiniere In-Memory + SQLite Rechnungen
       final sqliteBills = await _loadSharedBillsFromSQLite();
       final allBills = [..._sharedBills, ...sqliteBills];
       
-      print('🏠 BillSharingService: ${_sharedBills.length} In-Memory + ${sqliteBills.length} SQLite = ${allBills.length} total');
+      AppLogger.bills.debug('${_sharedBills.length} In-Memory + ${sqliteBills.length} SQLite = ${allBills.length} total');
       return List.unmodifiable(allBills);
     } else {
-      print('🎭 BillSharingService.getAllSharedBills: Demo-Mode - ${_sharedBills.length} Demo-Rechnungen');
+      AppLogger.bills.info('Demo-Mode - ${_sharedBills.length} Demo-Rechnungen');
       return List.unmodifiable(_sharedBills);
     }
   }
@@ -221,30 +222,30 @@ class BillSharingService {
       final userIdInt = int.tryParse(currentUser.id) ?? 1;
       final rawBills = await billService.getUserInvoices(userIdInt);
       
-      print('🔍 SQLite Rechnungen gefunden: ${rawBills.length}');
+      AppLogger.sql.info('SQLite Rechnungen gefunden: ${rawBills.length}');
       for (final bill in rawBills) {
-        print('📋 SQLite Bill: ID=${bill['id']}, Title="${bill['title']}", Date=${bill['date']}');
+        AppLogger.sql.debug('SQLite Bill: ID=${bill['id']}, Title="${bill['title']}", Date=${bill['date']}');
       }
       
       final List<SharedBill> sharedBills = [];
       for (int i = 0; i < rawBills.length; i++) {
         final rawBill = rawBills[i];
         try {
-          print('🔄 Konvertiere Bill ${i+1}/${rawBills.length}: ID=${rawBill['id']}');
+          AppLogger.sql.debug('Konvertiere Bill ${i+1}/${rawBills.length}: ID=${rawBill['id']}');
           final sharedBill = await _convertToSharedBill(rawBill, billService);
           sharedBills.add(sharedBill);
-          print('✅ Bill ${rawBill['id']} erfolgreich konvertiert: "${sharedBill.title}"');
+          AppLogger.sql.success('Bill ${rawBill['id']} erfolgreich konvertiert: "${sharedBill.title}"');
         } catch (e, stackTrace) {
-          print('❌ Fehler beim Konvertieren von Bill ID ${rawBill['id']}: $e');
-          print('📍 StackTrace: $stackTrace');
+          AppLogger.sql.error('Fehler beim Konvertieren von Bill ID ${rawBill['id']}: $e', e);
+          AppLogger.sql.error('StackTrace: $stackTrace');
         }
       }
       
-      print('🎯 SQLite-Konvertierung abgeschlossen: ${sharedBills.length}/${rawBills.length} erfolgreich');
+      AppLogger.sql.success('SQLite-Konvertierung abgeschlossen: ${sharedBills.length}/${rawBills.length} erfolgreich');
       return sharedBills;
     } catch (e, stackTrace) {
-      print('❌ FEHLER beim Laden aus SQLite: $e');
-      print('📍 StackTrace: $stackTrace');
+      AppLogger.sql.error('FEHLER beim Laden aus SQLite: $e', e);
+      AppLogger.sql.error('StackTrace: $stackTrace');
       return [];
     }
   }
@@ -252,23 +253,23 @@ class BillSharingService {
   /// Konvertiert SQLite-Bill zu SharedBill
   Future<SharedBill> _convertToSharedBill(Map<String, dynamic> rawBill, BillService billService) async {
     final billId = rawBill['id'] as int;
-    print('🔄 Konvertiere Bill ID $billId: "${rawBill['title']}"');
+    AppLogger.sql.debug('Konvertiere Bill ID $billId: "${rawBill['title']}"');
     
     try {
       // Lade echte Gesamtsumme aus der Datenbank
       final realTotal = await billService.getInvoiceTotal(billId);
-      print('💰 Echte Gesamtsumme für Bill $billId: $realTotal€');
+      AppLogger.sql.debug('Echte Gesamtsumme für Bill $billId: $realTotal€');
       
       // App-User Logic: DU erstellst Rechnung → DU hast bezahlt → DIR wird geschuldet
       final paidBy = await getCurrentUser(); // Immer der aktuelle App-User
       
-      print('💳 Rechnung bezahlt von: ${paidBy.name} (App-User)');
+      AppLogger.sql.debug('Rechnung bezahlt von: ${paidBy.name} (App-User)');
       
       // Lade echte Positionen und Personen
       final completeInvoice = await billService.getCompleteInvoice(billId);
       final positions = completeInvoice?['positions'] as List<Map<String, dynamic>>? ?? [];
       
-      print('📍 Gefundene Positionen: ${positions.length}');
+      AppLogger.sql.debug('Gefundene Positionen: ${positions.length}');
       
       final items = <BillItem>[];
       final allInvolvedPeople = <Person>{paidBy}; // Set für eindeutige Personen
@@ -294,9 +295,9 @@ class BillSharingService {
           ));
           
           if (assignedPerson.id == paidBy.id) {
-            print('📍 Position: "${pos['desc']}" → DU selbst (${posAmount}€) [KEINE SCHULD]');
+            AppLogger.bills.debug('Position: "${pos['desc']}" → DU selbst (${posAmount}€) [KEINE SCHULD]');
           } else {
-            print('📍 Position: "${pos['desc']}" → ${assignedPerson.name} schuldet DIR (${posAmount}€) ✅');
+            AppLogger.bills.debug('Position: "${pos['desc']}" → ${assignedPerson.name} schuldet DIR (${posAmount}€) ✅');
           }
         }
       }
@@ -309,7 +310,7 @@ class BillSharingService {
           amount: realTotal,
           sharedWith: [paidBy], // Fallback: Du schuldest dir selbst (keine Schuld)
         ));
-        print('📍 Fallback-Item: Keine Positionen gefunden, keine Schulden');
+        AppLogger.bills.debug('📍 Fallback-Item: Keine Positionen gefunden, keine Schulden');
       }
       
       final sharedBill = SharedBill(
@@ -325,21 +326,21 @@ class BillSharingService {
         createdAt: DateTime.tryParse(rawBill['date'] ?? '') ?? DateTime.now(),
       );
       
-      print('🎯 SharedBill erstellt: "${sharedBill.title}" (${sharedBill.totalAmount}€, ${sharedBill.items.length} items)');
+      AppLogger.bills.info('🎯 SharedBill erstellt: "${sharedBill.title}" (${sharedBill.totalAmount}€, ${sharedBill.items.length} items)');
       
       // WICHTIG: Test der Schuldenberechnung direkt hier
       final debts = sharedBill.getDebts();
-      print('💰 SCHULDEN-TEST für "${sharedBill.title}":');
-      print('   - Bezahlt von: ${sharedBill.paidBy.name}');
-      print('   - Schulden: ${debts.length}');
+      AppLogger.bills.debug('💰 SCHULDEN-TEST für "${sharedBill.title}":');
+      AppLogger.bills.debug('   - Bezahlt von: ${sharedBill.paidBy.name}');
+      AppLogger.bills.debug('   - Schulden: ${debts.length}');
       for (final entry in debts.entries) {
-        print('   - ${entry.key.name} schuldet ${entry.value.toStringAsFixed(2)}€');
+        AppLogger.bills.debug('   - ${entry.key.name} schuldet ${entry.value.toStringAsFixed(2)}€');
       }
       
       return sharedBill;
       
     } catch (e) {
-      print('⚠️ Fehler beim Laden der echten Summe für Bill $billId: $e');
+      AppLogger.bills.error('⚠️ Fehler beim Laden der echten Summe für Bill $billId: $e');
       // Fallback: Verwende 0.00€
       final paidBy = await getCurrentUser();
       return SharedBill(
@@ -361,19 +362,19 @@ class BillSharingService {
   Future<Person?> _findPersonByUserId(int userId) async {
     final currentUser = await getCurrentUser();
     if (currentUser.id == userId.toString()) {
-      print('👤 User ID $userId → Current User: ${currentUser.name}');
+      AppLogger.users.debug('👤 User ID $userId → Current User: ${currentUser.name}');
       return currentUser;
     }
     
     final friends = await getAllFriends();
     for (final friend in friends) {
       if (friend.id == userId.toString()) {
-        print('👤 User ID $userId → Friend: ${friend.name}');
+        AppLogger.users.debug('👤 User ID $userId → Friend: ${friend.name}');
         return friend;
       }
     }
     
-    print('⚠️ User ID $userId nicht gefunden');
+    AppLogger.users.error('⚠️ User ID $userId nicht gefunden');
     return null;
   }
 
@@ -412,12 +413,12 @@ class BillSharingService {
     
     final appMode = AppModeService();
     if (appMode.isRealMode) {
-      print('🏠 BillSharingService.createSharedBill: Real-Mode - Persistent speichern');
+      AppLogger.bills.info('🏠 BillSharingService.createSharedBill: Real-Mode - Persistent speichern');
       // TODO: [IMPLEMENTATION] Hier später echte Repository-Integration
       // Für jetzt: Auch im Real-Mode in-memory speichern aber markieren
-      print('📝 Rechnung "${bill.title}" im Real-Mode erstellt (ID: ${bill.id})');
+      AppLogger.bills.success('📝 Rechnung "${bill.title}" im Real-Mode erstellt (ID: ${bill.id})');
     } else {
-      print('🎭 BillSharingService.createSharedBill: Demo-Mode - In-Memory');
+      AppLogger.bills.info('🎭 BillSharingService.createSharedBill: Demo-Mode - In-Memory');
     }
     
     _sharedBills.add(bill);
@@ -444,30 +445,30 @@ class BillSharingService {
   /// 
   /// WICHTIG: Verwendet jetzt alle Rechnungen (In-Memory + SQLite)
   Future<List<Debt>> calculateAllDebts() async {
-    print('💰 SCHULDEN-BERECHNUNG gestartet...');
+    AppLogger.bills.info('💰 SCHULDEN-BERECHNUNG gestartet...');
     
     // Alle Rechnungen laden (inkl. SQLite)
     final allBills = await getAllSharedBills();
-    print('💰 Berechnungsgrundlage: ${allBills.length} Rechnungen');
+    AppLogger.bills.debug('💰 Berechnungsgrundlage: ${allBills.length} Rechnungen');
     
     final Map<String, Map<String, double>> debtMatrix = {};
     
     for (final bill in allBills) {
       if (bill.status == BillStatus.settled) {
-        print('💰 Überspringe beglichene Rechnung: ${bill.title}');
+        AppLogger.bills.debug('💰 Überspringe beglichene Rechnung: ${bill.title}');
         continue;
       }
       
-      print('💰 Verarbeite Rechnung: "${bill.title}"');
+      AppLogger.bills.debug('💰 Verarbeite Rechnung: "${bill.title}"');
       final debts = bill.getDebts();
-      print('💰   -> ${debts.length} Schulden gefunden');
+      AppLogger.bills.debug('💰   -> ${debts.length} Schulden gefunden');
       
       for (final entry in debts.entries) {
         final debtorId = entry.key.id;
         final creditorId = bill.paidBy.id;
         final amount = entry.value;
         
-        print('💰   -> ${entry.key.name} schuldet ${bill.paidBy.name}: ${amount.toStringAsFixed(2)}€');
+        AppLogger.bills.debug('💰   -> ${entry.key.name} schuldet ${bill.paidBy.name}: ${amount.toStringAsFixed(2)}€');
         
         debtMatrix[debtorId] ??= {};
         debtMatrix[debtorId]![creditorId] = (debtMatrix[debtorId]![creditorId] ?? 0.0) + amount;

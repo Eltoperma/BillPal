@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:billpal/models/invoice.dart';
-import 'package:billpal/services/finance_service.dart';
+import '../../../../models/invoice.dart';
+import '../../../../services/invoice_service.dart';
+import '../../../../core/logging/app_logger.dart';
 import 'package:billpal/core/utils/currency.dart';
 import 'package:intl/intl.dart';
 
@@ -20,7 +21,7 @@ class BillHistoryPage extends StatefulWidget {
 }
 
 class _BillHistoryPageState extends State<BillHistoryPage> {
-  final BillSharingAnalyticsService _analyticsService = BillSharingAnalyticsService();
+  final BillSharingService _analyticsService = BillSharingService();
   
   List<SharedBill> _allBills = [];
   List<SharedBill> _filteredBills = [];
@@ -45,11 +46,10 @@ class _BillHistoryPageState extends State<BillHistoryPage> {
     setState(() => _isLoading = true);
     
     try {
-      final summary = await _analyticsService.getDashboardSummary();
-      _allBills = summary.recentBills;
+      _allBills = await _analyticsService.getAllSharedBills();
       _applyFilters();
     } catch (e) {
-      print('Fehler beim Laden der Rechnungen: $e');
+      AppLogger.bills.error('Fehler beim Laden der Rechnungen: $e');
     }
     
     setState(() => _isLoading = false);

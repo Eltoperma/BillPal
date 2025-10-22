@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:billpal/core/database/repositories/repositories.dart';
 import 'package:billpal/core/database/repositories/mock_repositories.dart';
+import '../logging/app_logger.dart';
 
 /// Zentraler Service für Demo/Real Mode Management
 /// 
@@ -30,15 +31,15 @@ class AppModeService extends ChangeNotifier {
       
       if (hasRealUsers) {
         _currentMode = AppMode.real;
-        print('🏠 AppMode: Real-Mode erkannt (bestehende Benutzer gefunden)');
+        AppLogger.ui.info('🏠 AppMode: Real-Mode erkannt (bestehende Benutzer gefunden)');
       } else {
         _currentMode = AppMode.demo;
-        print('🎭 AppMode: Demo-Mode aktiviert (erste App-Nutzung)');
+        AppLogger.ui.info('🎭 AppMode: Demo-Mode aktiviert (erste App-Nutzung)');
       }
       
       return _currentMode;
     } catch (e) {
-      print('⚠️ AppMode: Fehler bei Detection, fallback zu Demo-Mode: $e');
+      AppLogger.ui.error('⚠️ AppMode: Fehler bei Detection, fallback zu Demo-Mode: $e');
       _currentMode = AppMode.demo;
       return _currentMode;
     }
@@ -46,7 +47,7 @@ class AppModeService extends ChangeNotifier {
 
   /// Manueller Wechsel zu Real-Mode (wird von Welcome-Screen aufgerufen)
   Future<void> switchToRealMode() async {
-    print('🔄 AppMode: Wechsel von ${_currentMode.name} zu Real-Mode');
+    AppLogger.ui.info('🔄 AppMode: Wechsel von ${_currentMode.name} zu Real-Mode');
     _currentMode = AppMode.real;
     notifyListeners(); // UI-Refresh auslösen
     
@@ -57,14 +58,14 @@ class AppModeService extends ChangeNotifier {
   /// Debug-Funktion: Manueller Wechsel zu Real-Mode
   /// TODO: [CLEANUP] Entfernen nach Testing
   Future<void> forceRealMode() async {
-    print('🔧 DEBUG: Force Real-Mode aktiviert');
+    AppLogger.ui.debug('🔧 DEBUG: Force Real-Mode aktiviert');
     _currentMode = AppMode.real;
     notifyListeners(); // UI-Refresh auslösen
   }
 
   /// Manueller Wechsel zu Demo-Mode (für Testing/Development)
   Future<void> switchToDemoMode() async {
-    print('🔄 AppMode: Wechsel von ${_currentMode.name} zu Demo-Mode');
+    AppLogger.ui.info('🔄 AppMode: Wechsel von ${_currentMode.name} zu Demo-Mode');
     _currentMode = AppMode.demo;
     notifyListeners(); // UI-Refresh auslösen
   }
@@ -86,7 +87,7 @@ class AppModeService extends ChangeNotifier {
       final users = await _userRepo.getAll();
       return users.isNotEmpty;
     } catch (e) {
-      print('⚠️ AppMode: Fehler beim Prüfen der Real-Users: $e');
+      AppLogger.ui.error('⚠️ AppMode: Fehler beim Prüfen der Real-Users: $e');
       return false;
     }
   }

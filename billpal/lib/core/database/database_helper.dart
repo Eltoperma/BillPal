@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
+import '../logging/app_logger.dart';
 
 /// Zentrale Datenbankklasse für die BillPal App
 /// Erstellt und verwaltet das SQLite-Schema basierend auf dem ERD
@@ -27,7 +28,7 @@ class DatabaseHelper {
     if (kIsWeb) {
       // Web: In-Memory Database verwenden
       path = ':memory:';
-      print('🗃️ SQLite DB (WEB/Memory): $path');
+      AppLogger.sql.info('🗃️ SQLite DB (WEB/Memory): $path');
     } else if (kDebugMode) {
       // Desktop Debug: Projektverzeichnis verwenden
       path = join(Directory.current.path, 'dev_data', 'billpal.db');
@@ -38,12 +39,12 @@ class DatabaseHelper {
         await devDataDir.create(recursive: true);
       }
       
-      print('🗃️ SQLite DB (DEV): $path');
+      AppLogger.sql.info('🗃️ SQLite DB (DEV): $path');
     } else {
       // Desktop/Mobile Production: App-Documents verwenden
       final Directory documentsDirectory = await getApplicationDocumentsDirectory();
       path = join(documentsDirectory.path, 'billpal.db');
-      print('🗃️ SQLite DB (PROD): $path');
+      AppLogger.sql.info('🗃️ SQLite DB (PROD): $path');
     }
     
     return await openDatabase(

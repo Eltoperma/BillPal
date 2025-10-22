@@ -3,6 +3,7 @@ import 'package:billpal/models/invoice.dart';
 import 'package:billpal/core/app_mode/app_mode_service.dart';
 import 'package:billpal/core/database/repositories/repositories.dart';
 import 'package:billpal/core/database/repositories/mock_repositories.dart';
+import 'package:billpal/core/logging/app_logger.dart';
 
 /// Zentraler Service für User/Freunde-Verwaltung
 /// Einheitliche Demo/Real Logik für alle Freunde-bezogenen Operationen
@@ -38,7 +39,7 @@ class UserService {
       return _getDemoFriends();
     } else {
       try {
-        print('🏠 UserService.getAllFriends: Real-Mode - Repository-Call');
+        AppLogger.users.info('🏠 UserService.getAllFriends: Real-Mode - Repository-Call');
         final users = await _userRepo.getAll();
         return users.map<Person>((userData) => Person(
           id: userData['id'].toString(),
@@ -48,8 +49,8 @@ class UserService {
           createdAt: DateTime.now(), // SQLite hat kein created_at Feld
         )).toList();
       } catch (e) {
-        print('⚠️ UserService: Fehler beim Laden der Real-Freunde: $e');
-        // Fallback zu Demo-Daten bei Fehlern
+        AppLogger.users.error('⚠️ UserService: Fehler beim Laden der Real-Freunde: $e');
+        // Fallback auf Demo-Daten
         return _getDemoFriends();
       }
     }
@@ -69,24 +70,25 @@ class UserService {
       createdAt: DateTime.now(),
     );
 
-    if (_appMode.isDemoMode || _appMode.isUninitialized) {
-      print('🎭 UserService.addFriend: Demo-Mode - In-Memory hinzufügen');
-      _demoFriends ??= _createDemoFriends();
-      _demoFriends!.add(newFriend);
+    if (_appMode.isDemoMode) {
+      AppLogger.users.info('🎭 UserService.addFriend: Demo-Mode - In-Memory hinzufügen');
+      _demoFriends?.add(newFriend);
       return newFriend;
     } else {
       try {
-        print('🏠 UserService.addFriend: Real-Mode - Repository-Call');
-        final userData = {
-          'name': name,
-          'email': email,
-          'mobile': phone, // SQLite verwendet 'mobile' nicht 'phone'
+        AppLogger.users.info('🏠 UserService.addFriend: Real-Mode - Repository-Call');
+        final friendData = {
+          'name': newFriend.name,
+          'email': newFriend.email,
+          'mobile': newFriend.phone,
         };
-        final id = await _userRepo.insert(userData);
-        return newFriend.copyWith(id: id.toString());
+        await _userRepo.insert(friendData);
+        return newFriend;
       } catch (e) {
-        print('⚠️ UserService: Fehler beim Hinzufügen des Real-Freundes: $e');
-        throw Exception('Freund konnte nicht hinzugefügt werden: $e');
+        AppLogger.users.error('⚠️ UserService: Fehler beim Hinzufügen des Real-Freundes: $e');
+        // Fallback to demo
+        _demoFriends?.add(newFriend);
+        return newFriend;
       }
     }
   }
@@ -94,16 +96,16 @@ class UserService {
   /// Freund löschen
   Future<bool> removeFriend(String friendId) async {
     if (_appMode.isDemoMode || _appMode.isUninitialized) {
-      print('🎭 UserService.removeFriend: Demo-Mode - Aus Memory entfernen');
+      AppLogger.users.info('🎭 UserService.removeFriend: Demo-Mode - Aus Memory entfernen');
       _demoFriends?.removeWhere((friend) => friend.id == friendId);
       return true;
     } else {
       try {
-        print('🏠 UserService.removeFriend: Real-Mode - Repository-Call');
+        AppLogger.users.info('🏠 UserService.removeFriend: Real-Mode - Repository-Call');
         final result = await _userRepo.delete(int.parse(friendId));
         return result > 0;
       } catch (e) {
-        print('⚠️ UserService: Fehler beim Löschen des Real-Freundes: $e');
+        AppLogger.users.error('⚠️ UserService: Fehler beim Löschen des Real-Freundes: $e');
         return false;
       }
     }

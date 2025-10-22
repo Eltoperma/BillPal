@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import '../../core/database/repositories/repositories.dart';
 import '../../core/database/repositories/mock_repositories.dart';
+import '../../core/logging/app_logger.dart';
 
 /// Service für Bill-Operationen mit Business-Logik
 /// Koordiniert mehrere Repositories und verwaltet Transaktionen
@@ -11,11 +12,11 @@ class BillService {
 
   BillService() {
     if (kIsWeb) {
-      print('🌐 Verwende Mock-Repositories für Web');
+      AppLogger.sql.info('🌐 Verwende Mock-Repositories für Web');
       _billRepository = MockBillRepository();
       _positionRepository = MockPositionRepository();
     } else {
-      print('🖥️ Verwende echte SQLite-Repositories');
+      AppLogger.sql.info('🖥️ Verwende echte SQLite-Repositories');
       _billRepository = BillRepository();
       _positionRepository = PositionRepository();
     }
@@ -31,22 +32,22 @@ class BillService {
     String? picturePath,
   }) async {
     
-    print('🔵 BillService.saveInvoiceData gestartet');
-    print('🔵 Titel: "$title"');
-    print('🔵 UserId: $userId');
-    print('🔵 LineItems: ${lineItems.length}');
+    AppLogger.bills.info('🔵 BillService.saveInvoiceData gestartet');
+    AppLogger.bills.debug('🔵 Titel: "$title"');
+    AppLogger.bills.debug('🔵 UserId: $userId');
+    AppLogger.bills.debug('🔵 LineItems: ${lineItems.length}');
     
     // 1. Validierung
     if (title.trim().isEmpty) {
-      print('❌ Titel ist leer');
+      AppLogger.bills.error('❌ Titel ist leer');
       throw Exception('Titel darf nicht leer sein');
     }
     if (lineItems.isEmpty) {
-      print('❌ Keine LineItems');
-      throw Exception('Mindestens eine Position erforderlich');
+      AppLogger.bills.error('❌ Keine LineItems');
+      throw Exception('Mindestens ein LineItem erforderlich');
     }
     
-    print('✅ Validierung OK');
+    AppLogger.bills.success('✅ Validierung OK');
     
     // 2. Bill erstellen
     final billData = {
@@ -56,27 +57,27 @@ class BillService {
       'pic': picturePath,
     };
     
-    print('🔵 Erstelle Bill mit: $billData');
+    AppLogger.sql.debug('🔵 Erstelle Bill mit: $billData');
     late final int billId;
     try {
       billId = await _billRepository.insert(billData);
-      print('✅ Bill erstellt mit ID: $billId');
+      AppLogger.sql.success('✅ Bill erstellt mit ID: $billId');
     } catch (e, stackTrace) {
-      print('❌ FEHLER beim Bill-Insert: $e');
-      print('📍 StackTrace: $stackTrace');
+      AppLogger.sql.error('❌ FEHLER beim Bill-Insert: $e');
+      AppLogger.sql.error('📍 StackTrace: $stackTrace');
       rethrow; // Exception weiterwerfen
     }
     
     // 3. Alle Positionen speichern
-    print('🔵 Speichere ${lineItems.length} Positionen...');
+    AppLogger.bills.info('🔵 Speichere ${lineItems.length} Positionen...');
     for (int i = 0; i < lineItems.length; i++) {
       final item = lineItems[i];
-      print('🔵 Position ${i+1}: "${item.description}" - ${item.amount}€');
+      AppLogger.bills.debug('🔵 Position ${i+1}: "${item.description}" - ${item.amount}€');
       
       if (item.description.trim().isEmpty || 
           item.amount <= 0 || 
           item.assigneeUserId == null) {
-        print('⚠️ Position ${i+1} übersprungen (ungültig)');
+        AppLogger.bills.debug('⚠️ Position ${i+1} übersprungen (ungültig)');
         continue; // Überspringe ungültige Items
       }
       
@@ -89,18 +90,18 @@ class BillService {
         'user_id': item.assigneeUserId!,
       };
       
-      print('🔵 Speichere Position: $positionData');
+      AppLogger.sql.debug('🔵 Speichere Position: $positionData');
       try {
         await _positionRepository.insert(positionData);
-        print('✅ Position ${i+1} gespeichert');
+        AppLogger.sql.success('✅ Position ${i+1} gespeichert');
       } catch (e, stackTrace) {
-        print('❌ FEHLER beim Position-Insert: $e');
-        print('📍 StackTrace: $stackTrace');
+        AppLogger.sql.error('❌ FEHLER beim Position-Insert: $e');
+        AppLogger.sql.error('📍 StackTrace: $stackTrace');
         rethrow;
       }
     }
     
-    print('🎉 Alle Daten erfolgreich gespeichert! Bill-ID: $billId');
+    AppLogger.bills.success('🎉 Alle Daten erfolgreich gespeichert! Bill-ID: $billId');
     return billId;
   }
 

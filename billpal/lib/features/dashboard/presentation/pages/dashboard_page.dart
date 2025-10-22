@@ -9,6 +9,7 @@ import 'package:billpal/features/friends/presentation/widgets/friends_preview_ca
 import 'package:billpal/features/settings/presentation/widgets/app_drawer.dart';
 import 'package:billpal/l10n/locale_controller.dart';
 import 'package:billpal/models/invoice.dart'; // Für Person-Model
+import 'package:billpal/core/logging/app_logger.dart';
 import 'package:billpal/services/finance_service.dart';
 import 'package:billpal/services/invoice_service.dart';
 import 'package:billpal/services/user_service.dart'; // UserService für echte Freunde
@@ -55,7 +56,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
   /// Callback bei Mode-Wechsel - lädt Dashboard neu
   void _onModeChanged() {
-    print('🔄 Dashboard: Mode gewechselt zu ${AppModeService().currentMode.name} - Reload');
+    AppLogger.dashboard.info('🔄 Dashboard: Mode gewechselt zu ${AppModeService().currentMode.name} - Reload');
     _reload();
   }
 

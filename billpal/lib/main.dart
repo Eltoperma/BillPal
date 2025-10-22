@@ -2,6 +2,7 @@ import 'package:billpal/app/app.dart';
 import 'package:billpal/core/theme/theme_controller.dart';
 import 'package:billpal/l10n/locale_controller.dart';
 import 'package:billpal/core/app_mode/app_mode_service.dart';
+import 'package:billpal/core/logging/app_logger.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
@@ -21,7 +22,7 @@ Future<void> main() async {
   ]);
 
   // Debug Info für Development
-  print(appModeService.getDebugInfo());
+  AppLogger.globalInfo(appModeService.getDebugInfo());
 
   Intl.defaultLocale = 'de_DE';
   runApp(
