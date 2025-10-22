@@ -33,6 +33,45 @@ class UserService {
     }
   }
 
+  /// Gibt einen User anhand der ID zurück
+  Future<Person?> getUserById(int userId) async {
+    if (_appMode.isDemoMode || _appMode.isUninitialized) {
+      // Demo-Mode: In-Memory Suche
+      final currentUser = _getDemoCurrentUser();
+      if (userId == 1 || currentUser.id == userId.toString()) {
+        return currentUser;
+      }
+      
+      final friends = _getDemoFriends();
+      try {
+        return friends.firstWhere((friend) => 
+          friend.id == userId.toString() || 
+          friend.id == 'friend_${userId - 1}' // friend_1 = userId 2, etc.
+        );
+      } catch (e) {
+        return null;
+      }
+    } else {
+      // Real-Mode: Repository-Call
+      try {
+        final userData = await _userRepo.getById(userId);
+        if (userData != null) {
+          return Person(
+            id: userData['id'].toString(),
+            name: userData['name'] ?? 'Unbekannt',
+            email: userData['email'],
+            phone: userData['mobile'],
+            createdAt: DateTime.now(),
+          );
+        }
+        return null;
+      } catch (e) {
+        AppLogger.users.error('Fehler beim Laden des Users $userId: $e');
+        return null;
+      }
+    }
+  }
+
   /// Gibt alle Freunde zurück
   Future<List<Person>> getAllFriends() async {
     if (_appMode.isDemoMode || _appMode.isUninitialized) {

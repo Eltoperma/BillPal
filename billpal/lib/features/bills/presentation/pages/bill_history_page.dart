@@ -4,6 +4,7 @@ import 'package:billpal/shared/application/services.dart';
 import '../../../../core/logging/app_logger.dart';
 import 'package:billpal/core/utils/currency.dart';
 import 'package:intl/intl.dart';
+import 'bill_detail_page.dart';
 
 /// Vollständige Rechnungshistorie-Seite
 class BillHistoryPage extends StatefulWidget {
@@ -328,8 +329,11 @@ class _BillHistoryPageState extends State<BillHistoryPage> {
     
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
+      child: InkWell(
+        onTap: () => _showBillDetails(bill),
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
         child: Row(
           children: [
             // Status Icon
@@ -434,6 +438,15 @@ class _BillHistoryPageState extends State<BillHistoryPage> {
             ),
           ],
         ),
+        ),
+      ),
+    );
+  }
+
+  void _showBillDetails(SharedBill bill) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => BillDetailPage(bill: bill),
       ),
     );
   }

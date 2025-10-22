@@ -1,9 +1,12 @@
 import 'dart:math';
+import 'package:flutter/foundation.dart';
 import 'package:billpal/shared/domain/entities.dart';
 import 'package:billpal/core/app_mode/app_mode_service.dart';
 import 'package:billpal/shared/application/services/user_service.dart';
 import 'package:billpal/features/bills/bill_service.dart';
 import 'package:billpal/core/logging/app_logger.dart';
+import 'package:billpal/core/database/repositories/repositories.dart';
+import 'package:billpal/core/database/repositories/mock_repositories.dart';
 
 /// Service für die Verwaltung von geteilten Rechnungen zwischen Freunden
 /// 
@@ -12,11 +15,14 @@ import 'package:billpal/core/logging/app_logger.dart';
 class BillSharingService {
   static final BillSharingService _instance = BillSharingService._internal();
   factory BillSharingService() => _instance;
-  BillSharingService._internal();
+  BillSharingService._internal() {
+    _positionRepo = kIsWeb ? MockPositionRepository() : PositionRepository();
+  }
 
   final UserService _userService = UserService(); // Zentrale User-Verwaltung
   final List<SharedBill> _sharedBills = [];
   final Random _random = Random();
+  late final dynamic _positionRepo; // Mock oder Real Repository
 
   /// Initialisiert den Service mit Demo-Daten oder lädt echte Rechnungen
   /// 
@@ -313,7 +319,7 @@ class BillSharingService {
       }
       
       final sharedBill = SharedBill(
-        id: 'sqlite_$billId',
+        id: billId.toString(),
         title: rawBill['title'] ?? 'Rechnung',
         description: 'Aus SQLite geladen',
         totalAmount: realTotal,
@@ -343,7 +349,7 @@ class BillSharingService {
       // Fallback: Verwende 0.00€
       final paidBy = await getCurrentUser();
       return SharedBill(
-        id: 'sqlite_$billId',
+        id: billId.toString(),
         title: rawBill['title'] ?? 'Rechnung',
         description: 'Aus SQLite geladen (Fehler)',
         totalAmount: 0.0,
@@ -527,5 +533,73 @@ class BillSharingService {
     return _sharedBills.where((bill) =>
       bill.eventName?.toLowerCase().contains(eventName.toLowerCase()) ?? false
     ).toList();
+  }
+
+  /// Lädt die Positionen einer Rechnung mit Settlement-Status
+  Future<List<BillPosition>> getBillPositions(String billId) async {
+    try {
+      AppLogger.bills.debug('🔍 getBillPositions für Bill-ID: "$billId"');
+      
+      // Versuche als SQLite-ID zu parsen
+      final billIdInt = int.tryParse(billId);
+      if (billIdInt != null) {
+        AppLogger.bills.debug('🗄️ SQLite-Bill erkannt, DB-ID: $billIdInt');
+        
+        final positions = await _positionRepo.getPositionsByBillId(billIdInt);
+        AppLogger.bills.debug('📋 Gefundene Positionen: ${positions.length}');
+        
+        final result = <BillPosition>[];
+        for (final pos in positions) {
+          final assignedUser = await _userService.getUserById(pos['user_id']);
+          if (assignedUser != null) {
+            result.add(BillPosition(
+              id: pos['id'],
+              description: pos['desc'] ?? 'Unbekannte Position',
+              amount: (pos['amount'] as num).toDouble(),
+              assignedTo: assignedUser,
+              isSettled: pos['open'] == 0, // 0 = settled, 1 = open
+            ));
+            AppLogger.bills.debug('✅ Position: "${pos['desc']}" - ${pos['amount']}€ → ${assignedUser.name}');
+          }
+        }
+        return result;
+      }
+      
+      // Demo-Mode: Aus SharedBill Items laden  
+      AppLogger.bills.debug('🎭 Demo-Mode: Suche in Bills nach ID "$billId"');
+      final allBills = await getAllSharedBills();
+      final bill = allBills.firstWhere((b) => b.id == billId);
+      
+      AppLogger.bills.debug('📄 Bill gefunden: "${bill.title}" mit ${bill.items.length} Items');
+      return bill.items.map((item) => BillPosition(
+        id: item.hashCode,
+        description: item.name,
+        amount: item.amount,
+        assignedTo: item.sharedWith.isNotEmpty ? item.sharedWith.first : bill.paidBy,
+        isSettled: false, // Demo-Mode: Standardmäßig nicht beglichen
+      )).toList();
+    } catch (e) {
+      AppLogger.bills.error('Fehler beim Laden der Positionen für Bill $billId: $e');
+      return [];
+    }
+  }
+
+  /// Aktualisiert den Settlement-Status einer Position
+  Future<void> updatePositionSettlement(int positionId, bool isSettled) async {
+    try {
+      final rowsUpdated = await _positionRepo.updatePositionSettlement(
+        positionId: positionId, 
+        isSettled: isSettled
+      );
+      
+      if (rowsUpdated > 0) {
+        AppLogger.bills.success('✅ Position $positionId Settlement-Status aktualisiert: ${isSettled ? "beglichen" : "offen"}');
+      } else {
+        AppLogger.bills.warning('⚠️ Position $positionId nicht gefunden');
+      }
+    } catch (e) {
+      AppLogger.bills.error('Fehler beim Aktualisieren des Settlement-Status: $e');
+      rethrow;
+    }
   }
 }

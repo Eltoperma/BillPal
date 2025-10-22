@@ -4,3 +4,4 @@
 export 'entities/person.dart';
 export 'entities/bill.dart';
 export 'entities/financial_data.dart';
+export 'entities/bill_position.dart';

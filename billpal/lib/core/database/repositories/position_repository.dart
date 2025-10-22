@@ -97,4 +97,18 @@ class PositionRepository implements BaseRepository<Map<String, dynamic>> {
     
     return (result.first['total'] as double?) ?? 0.0;
   }
+
+  /// Aktualisiert den Settlement-Status einer Position
+  Future<int> updatePositionSettlement({
+    required int positionId, 
+    required bool isSettled
+  }) async {
+    final Database db = await _databaseHelper.database;
+    return await db.update(
+      'positions',
+      {'open': isSettled ? 0 : 1}, // 0 = settled (not open), 1 = open
+      where: 'id = ?',
+      whereArgs: [positionId],
+    );
+  }
 }
