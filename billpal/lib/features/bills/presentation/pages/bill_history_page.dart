@@ -164,6 +164,20 @@ class _BillHistoryPageState extends State<BillHistoryPage> {
         title: Text(_getPageTitle()),
         backgroundColor: Colors.transparent,
         elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            AppLogger.nav.info('🔙 Zurück-Navigation von BillHistory');
+            if (Navigator.of(context).canPop()) {
+              Navigator.of(context).pop();
+            } else {
+              // Fallback: Wenn nichts zum zurückkehren da ist, gehe zum Dashboard
+              AppLogger.nav.debug('Kein Pop möglich, navigiere zum Dashboard');
+              Navigator.of(context).pushReplacementNamed('/');
+            }
+          },
+          tooltip: 'Zurück',
+        ),
         actions: [
           PopupMenuButton<String>(
             icon: const Icon(Icons.sort),

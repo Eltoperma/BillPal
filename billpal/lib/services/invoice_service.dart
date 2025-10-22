@@ -31,11 +31,10 @@ class BillSharingService {
       // Erstelle Demo-Rechnungen (Freunde werden vom UserService verwaltet)
       await _createDemoSharedBills();
     } else {
-      AppLogger.bills.info('Real-Mode aktiv - In-Memory Rechnungen beibehalten');
-      AppLogger.bills.debug('${_sharedBills.length} Real-Mode Rechnungen gefunden');
-      // TODO: [IMPLEMENTATION] Hier später echte Repository-Calls für persistente Rechnungen
-      // Für jetzt: In-Memory Rechnungen auch im Real-Mode verwenden
-      // _sharedBills.clear(); // NICHT löschen im Real-Mode!
+      AppLogger.bills.info('Real-Mode aktiv - Mock-Daten löschen, nur echte Rechnungen');
+      _sharedBills.clear(); // Demo-Rechnungen entfernen im Real-Mode
+      AppLogger.bills.debug('Mock-Rechnungen entfernt, nur echte SQLite-Daten werden geladen');
+      // Echte Rechnungen werden über getAllSharedBills() aus SQLite geladen
     }
   }
 

@@ -46,7 +46,13 @@ class _NavTile extends StatelessWidget {
       title: Text(label),
       onTap: () {
         Navigator.pop(context);
-        Navigator.pushReplacementNamed(context, route);
+        // Dashboard ist die Hauptseite - verwende replacement
+        // Andere Seiten sind Einschübe - verwende push
+        if (route == '/') {
+          Navigator.pushReplacementNamed(context, route);
+        } else {
+          Navigator.pushNamed(context, route);
+        }
       },
     );
   }
