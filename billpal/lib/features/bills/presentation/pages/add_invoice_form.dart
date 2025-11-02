@@ -146,6 +146,28 @@ class _AddInvoiceFormState extends State<AddInvoiceForm> {
     }
   }
 
+  void _populateFormFromReceipt(ReceiptData receiptData) {
+    // Set title from restaurant name if available
+    if (receiptData.restaurantName != null &&
+        receiptData.restaurantName!.isNotEmpty) {
+      _titleCtrl.text = receiptData.restaurantName!;
+    }
+
+    // Convert receipt line items to form line items
+    if (receiptData.items.isNotEmpty) {
+      _items.clear();
+      for (final receiptItem in receiptData.items) {
+        _items.add(
+          LineItem(
+            description: receiptItem.description,
+            amount: receiptItem.totalPrice,
+            assignee: null, // User needs to assign manually
+          ),
+        );
+      }
+    }
+  }
+
   @override
   void dispose() {
     _titleCtrl.dispose();

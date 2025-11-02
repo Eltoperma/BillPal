@@ -1,4 +1,3 @@
-import 'package:billpal/features/bills/presentation/pages/add_invoice_form.dart';
 import 'package:billpal/shared/domain/entities.dart';
 import 'package:flutter/material.dart';
 import '../../infrastructure/ocr/ocr_service.dart';
@@ -6,6 +5,7 @@ import '../../infrastructure/ocr/receipt_data.dart';
 import '../../infrastructure/parsing/receipt_parser.dart';
 import '../../infrastructure/picking/image_picker_service.dart';
 import '../pages/add_invoice_form.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 /// Welche UI soll für die Quellenwahl genutzt werden?
 //enum AddInvoiceUI { sheet, menu, adaptive }
