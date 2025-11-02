@@ -1,6 +1,5 @@
-import 'package:billpal/models/financial_data.dart';
-import 'package:billpal/services/finance_service.dart';
-import 'package:billpal/services/invoice_service.dart';
+import 'package:billpal/shared/domain/entities.dart';
+import 'package:billpal/shared/application/services.dart';
 import 'package:flutter/foundation.dart';
 
 /// Alles, was das Dashboard braucht – ohne Widgets.
@@ -50,13 +49,13 @@ class DashboardController {
 
   /// Initiales Laden (Demo-Daten + Analytics).
   Future<DashboardState> load() async {
-    // Demo-Daten initialisieren (heute synchron; später evtl. async)
-    bills.initializeDemoData();
+    // Demo-Daten initialisieren (jetzt async)
+    await bills.initializeDemoData();
 
-    // Daten holen (heute synchron)
-    final summary = analytics.getDashboardSummary();
-    final cards = analytics.getSummaryCards();
-    final pie = analytics.getExpensePieSlices();
+    // Daten holen (jetzt async)
+    final summary = await analytics.getDashboardSummary();
+    final cards = await analytics.getSummaryCards();
+    final pie = await analytics.getExpensePieSlices(); // Jetzt async!
     final suggestions = analytics.getEventSuggestions();
 
     return DashboardState(

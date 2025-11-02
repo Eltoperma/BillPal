@@ -1,5 +1,5 @@
 import 'package:billpal/features/dashboard/presentation/widgets/pie_chart.dart';
-import 'package:billpal/models/financial_data.dart';
+import 'package:billpal/shared/domain/entities.dart';
 import 'package:flutter/material.dart';
 
 class ExpenseChartSection extends StatelessWidget {
