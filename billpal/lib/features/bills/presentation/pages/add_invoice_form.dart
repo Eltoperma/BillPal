@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../../infrastructure/ocr/receipt_data.dart';
 
 // --- simple models just for the form (kannst du später in domain/models ziehen) ---
 class Person {
@@ -69,10 +70,64 @@ Future<void> openAddInvoice(
   }
 }
 
+Future<void> openAddInvoiceWithData(
+  BuildContext context, {
+  required List<Person> people,
+  required ReceiptData receiptData,
+  void Function(InvoiceData data)? onSubmit,
+}) async {
+  final width = MediaQuery.of(context).size.width;
+  final child = AddInvoiceForm(
+    people: people,
+    onSubmit: onSubmit,
+    initialReceiptData: receiptData,
+  );
+
+  if (width < 700) {
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+        child: DraggableScrollableSheet(
+          expand: false,
+          maxChildSize: 0.95,
+          minChildSize: 0.5,
+          initialChildSize: 0.85,
+          builder: (_, scrollController) =>
+              SingleChildScrollView(controller: scrollController, child: child),
+        ),
+      ),
+    );
+  } else {
+    await showDialog(
+      context: context,
+      builder: (ctx) => Dialog(
+        insetPadding: const EdgeInsets.all(24),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 720),
+          child: SingleChildScrollView(child: child),
+        ),
+      ),
+    );
+  }
+}
+
 class AddInvoiceForm extends StatefulWidget {
   final List<Person> people;
   final void Function(InvoiceData data)? onSubmit;
-  const AddInvoiceForm({super.key, required this.people, this.onSubmit});
+  final ReceiptData? initialReceiptData;
+
+  const AddInvoiceForm({
+    super.key,
+    required this.people,
+    this.onSubmit,
+    this.initialReceiptData,
+  });
 
   @override
   State<AddInvoiceForm> createState() => _AddInvoiceFormState();
@@ -85,6 +140,14 @@ class _AddInvoiceFormState extends State<AddInvoiceForm> {
   final _items = <LineItem>[LineItem()];
 
   final _currencyFmt = NumberFormat.currency(locale: 'de_DE', symbol: '€');
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialReceiptData != null) {
+      _populateFormFromReceipt(widget.initialReceiptData!);
+    }
+  }
 
   @override
   void dispose() {
@@ -100,7 +163,7 @@ class _AddInvoiceFormState extends State<AddInvoiceForm> {
       initialDate: _dateTime,
       locale: const Locale('de', 'DE'),
     );
-    if (date == null) return;
+    if (date == null || !mounted) return;
     final time = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.fromDateTime(_dateTime),
@@ -109,7 +172,7 @@ class _AddInvoiceFormState extends State<AddInvoiceForm> {
         child: child!,
       ),
     );
-    if (time == null) return;
+    if (time == null || !mounted) return;
     setState(() {
       _dateTime = DateTime(
         date.year,
@@ -152,6 +215,44 @@ class _AddInvoiceFormState extends State<AddInvoiceForm> {
     Navigator.of(context).maybePop();
   }
 
+  void _populateFormFromReceipt(ReceiptData receiptData) {
+    if (receiptData.restaurantName != null &&
+        receiptData.restaurantName!.isNotEmpty) {
+      _titleCtrl.text = receiptData.restaurantName!;
+    }
+
+    setState(() {
+      _items.clear();
+
+      if (receiptData.items.isEmpty) {
+        _items.add(LineItem());
+      } else {
+        for (final receiptItem in receiptData.items) {
+          _items.add(
+            LineItem(
+              description: receiptItem.description,
+              amount: receiptItem.totalPrice,
+              assignee: null,
+            ),
+          );
+        }
+      }
+    });
+
+    if (!receiptData.isTotalConsistent) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Warnung: Summe (${_currencyFmt.format(receiptData.total)}) '
+            'stimmt nicht mit Positionen überein.',
+          ),
+          backgroundColor: Colors.orange,
+          duration: const Duration(seconds: 5),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final dateLabel = DateFormat(
@@ -183,7 +284,6 @@ class _AddInvoiceFormState extends State<AddInvoiceForm> {
               ],
             ),
             const SizedBox(height: 8),
-
             TextFormField(
               controller: _titleCtrl,
               textInputAction: TextInputAction.next,
@@ -195,7 +295,6 @@ class _AddInvoiceFormState extends State<AddInvoiceForm> {
                   (v == null || v.trim().isEmpty) ? 'Titel erforderlich' : null,
             ),
             const SizedBox(height: 12),
-
             InkWell(
               onTap: _pickDateTime,
               borderRadius: BorderRadius.circular(8),
@@ -215,7 +314,6 @@ class _AddInvoiceFormState extends State<AddInvoiceForm> {
               ),
             ),
             const SizedBox(height: 16),
-
             Row(
               children: [
                 const Text(
@@ -231,7 +329,6 @@ class _AddInvoiceFormState extends State<AddInvoiceForm> {
               ],
             ),
             const SizedBox(height: 8),
-
             for (int i = 0; i < _items.length; i++) ...[
               _LineItemRow(
                 key: ValueKey('line-$i'),
@@ -242,7 +339,6 @@ class _AddInvoiceFormState extends State<AddInvoiceForm> {
               ),
               const SizedBox(height: 8),
             ],
-
             const Divider(height: 24),
             Row(
               children: [
@@ -255,7 +351,6 @@ class _AddInvoiceFormState extends State<AddInvoiceForm> {
               ],
             ),
             const SizedBox(height: 16),
-
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
@@ -375,7 +470,7 @@ class _LineItemRowState extends State<_LineItemRow> {
             Expanded(
               flex: 3,
               child: DropdownButtonFormField<Person>(
-                value: _assignee,
+                initialValue: _assignee,
                 items: widget.people
                     .map((p) => DropdownMenuItem(value: p, child: Text(p.name)))
                     .toList(),
