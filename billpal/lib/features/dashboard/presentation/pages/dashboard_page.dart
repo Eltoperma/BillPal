@@ -1,15 +1,18 @@
-import 'package:billpal/features/bills/presentation/pages/add_invoice_form.dart';
 import 'package:billpal/features/bills/presentation/entrypoint/add_invoice_entrypoint.dart';
 import 'package:billpal/features/dashboard/application/dashboard_controller.dart';
 import 'package:billpal/features/dashboard/presentation/widgets/debts_list.dart';
 import 'package:billpal/features/dashboard/presentation/widgets/expense_chart_section.dart';
 import 'package:billpal/features/dashboard/presentation/widgets/header.dart';
 import 'package:billpal/features/dashboard/presentation/widgets/summary_cards.dart';
+import 'package:billpal/features/dashboard/presentation/widgets/recent_bills_list.dart';
+import 'package:billpal/features/friends/presentation/widgets/friends_preview_card.dart';
 import 'package:billpal/features/settings/presentation/widgets/app_drawer.dart';
 import 'package:billpal/l10n/locale_controller.dart';
-import 'package:billpal/services/finance_service.dart';
-import 'package:billpal/services/invoice_service.dart';
+import 'package:billpal/shared/domain/entities.dart';
+import 'package:billpal/core/logging/app_logger.dart';
+import 'package:billpal/shared/application/services.dart';
 import 'package:billpal/core/theme/theme_controller.dart';
+import 'package:billpal/core/app_mode/app_mode_service.dart';
 import 'package:flutter/material.dart';
 
 class DashboardPage extends StatefulWidget {
@@ -36,6 +39,22 @@ class _DashboardPageState extends State<DashboardPage> {
       analytics: BillSharingAnalyticsService(),
       bills: BillSharingService(),
     );
+    
+    // Listener für Mode-Changes
+    AppModeService().addListener(_onModeChanged);
+    
+    _reload();
+  }
+
+  @override
+  void dispose() {
+    AppModeService().removeListener(_onModeChanged);
+    super.dispose();
+  }
+
+  /// Callback bei Mode-Wechsel - lädt Dashboard neu
+  void _onModeChanged() {
+    AppLogger.dashboard.info('🔄 Dashboard: Mode gewechselt zu ${AppModeService().currentMode.name} - Reload');
     _reload();
   }
 
@@ -86,10 +105,55 @@ class _DashboardPageState extends State<DashboardPage> {
                     children: [
                       Expanded(child: DashboardHeader(summary: summary)),
                       const SizedBox(width: 8),
-                      IconButton(
-                        tooltip: 'Menu',
-                        onPressed: () => Scaffold.of(ctx).openEndDrawer(),
-                        icon: const Icon(Icons.menu),
+                      // TODO: [CLEANUP] Debug-Info entfernen nach Branch-Cleanup
+                      Column(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: AppModeService().isDemoMode ? Colors.orange.shade100 : Colors.green.shade100,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              AppModeService().currentMode.name,
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: AppModeService().isDemoMode ? Colors.orange.shade800 : Colors.green.shade800,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          // DEBUG: Real-Mode Switch Button
+                          // TODO: [CLEANUP] Nach Testing entfernen
+                          if (AppModeService().currentMode == AppMode.demo)
+                            ElevatedButton.icon(
+                              icon: const Icon(Icons.rocket_launch, size: 14),
+                              label: const Text('Real', style: TextStyle(fontSize: 10)),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.green,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                minimumSize: const Size(60, 28),
+                              ),
+                              onPressed: () async {
+                                await AppModeService().forceRealMode();
+                                setState(() {}); // UI refresh
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('🚀 Real-Mode aktiviert! Echte Datenbank wird verwendet.'),
+                                    backgroundColor: Colors.green,
+                                  ),
+                                );
+                              },
+                            ),
+                          const SizedBox(height: 4),
+                          IconButton(
+                            tooltip: 'Menu',
+                            onPressed: () => Scaffold.of(ctx).openEndDrawer(),
+                            icon: const Icon(Icons.menu),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -101,6 +165,12 @@ class _DashboardPageState extends State<DashboardPage> {
 
                   const SizedBox(height: 32),
 
+                  // TODO: [CLEANUP] Friends Card nach Branch-Cleanup optional machen
+                  // Freunde-Vorschau (Collapsible)
+                  const FriendsPreviewCard(),
+
+                  const SizedBox(height: 32),
+
                   // Kreisdiagramm: Ausgaben-Kategorien
                   ExpenseChartSection(expenseSlices: _state.pieSlices),
 
@@ -108,6 +178,11 @@ class _DashboardPageState extends State<DashboardPage> {
 
                   // Karte: aktuelle Schulden Details
                   DebtsList(summary: summary),
+
+                  const SizedBox(height: 32),
+
+                  // Karte: Letzte Rechnungen
+                  RecentBillsList(summary: summary),
 
                   const SizedBox(height: 100),
                 ],
@@ -118,12 +193,13 @@ class _DashboardPageState extends State<DashboardPage> {
       ),
 
       // Button: Rechnung teilen (hinzufügen)
-      floatingActionButton: AddInvoiceEntryButton(
-        people: const [
-          Person(id: 'tom', name: 'Tom'),
-          Person(id: 'sue', name: 'Sue'),
-          Person(id: 'max', name: 'Max'),
-        ],
+      // TODO: [CLEANUP] Nach vollständiger Migration Mock-Logik entfernen
+      floatingActionButton: FutureBuilder<List<Person>>(
+        future: UserService().getAllFriends(), // UserService statt BillSharingService!
+        builder: (context, snapshot) {
+          final people = snapshot.data ?? [];
+          return AddInvoiceEntryButton(people: people);
+        },
       ),
     );
   }

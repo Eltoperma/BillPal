@@ -1,4 +1,5 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:billpal/features/bills/presentation/pages/add_invoice_form.dart';
+import 'package:billpal/shared/domain/entities.dart';
 import 'package:flutter/material.dart';
 import '../../infrastructure/ocr/ocr_service.dart';
 import '../../infrastructure/ocr/receipt_data.dart';
@@ -128,7 +129,11 @@ class _MenuAnchorButtonState extends State<_MenuAnchorButton> {
           leadingIcon: const Icon(Icons.photo_camera_outlined),
           onPressed: () async {
             _menu.close();
-            await _scanReceipt(context, people: widget.people, fromCamera: true);
+            await _scanReceipt(
+              context,
+              people: widget.people,
+              fromCamera: true,
+            );
           },
           child: const Text('Foto aufnehmen'),
         ),
@@ -136,7 +141,11 @@ class _MenuAnchorButtonState extends State<_MenuAnchorButton> {
           leadingIcon: const Icon(Icons.image_outlined),
           onPressed: () async {
             _menu.close();
-            await _scanReceipt(context, people: widget.people, fromCamera: false);
+            await _scanReceipt(
+              context,
+              people: widget.people,
+              fromCamera: false,
+            );
           },
           child: const Text('Aus Galerie/Dateien importieren'),
         ),

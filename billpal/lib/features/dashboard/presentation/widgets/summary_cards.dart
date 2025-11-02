@@ -1,4 +1,4 @@
-import 'package:billpal/models/financial_data.dart';
+import 'package:billpal/shared/domain/entities.dart';
 import 'package:billpal/features/dashboard/presentation/widgets/financial_info_card.dart';
 import 'package:flutter/material.dart';
 

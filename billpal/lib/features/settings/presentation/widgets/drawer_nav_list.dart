@@ -12,12 +12,12 @@ class DrawerNavList extends StatelessWidget {
           label: 'Dashboard',
           route: '/',
         ),
-        _NavTile(
-          icon: Icons.receipt_long_outlined,
-          label: 'Meine Rechnungen',
-          route: '/bills',
-        ),
         _NavTile(icon: Icons.history, label: 'Historie', route: '/history'),
+        _NavTile(
+          icon: Icons.people_outlined,
+          label: 'Meine Freunde',
+          route: '/friends',
+        ),
         const Divider(height: 32),
       ],
     );
@@ -41,7 +41,13 @@ class _NavTile extends StatelessWidget {
       title: Text(label),
       onTap: () {
         Navigator.pop(context);
-        Navigator.pushReplacementNamed(context, route);
+        // Dashboard ist die Hauptseite - verwende replacement
+        // Andere Seiten sind Einschübe - verwende push
+        if (route == '/') {
+          Navigator.pushReplacementNamed(context, route);
+        } else {
+          Navigator.pushNamed(context, route);
+        }
       },
     );
   }

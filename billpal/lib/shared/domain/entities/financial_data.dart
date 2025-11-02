@@ -1,5 +1,6 @@
 import 'package:billpal/core/utils/currency.dart';
-import 'package:billpal/models/invoice.dart';
+import 'package:billpal/shared/domain/entities/person.dart';
+import 'package:billpal/shared/domain/entities/bill.dart';
 import 'package:flutter/material.dart';
 
 /// Zusammenfassung der geteilten Rechnungen für das Dashboard

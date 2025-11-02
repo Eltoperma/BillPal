@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../infrastructure/ocr/receipt_data.dart';
-
-// --- simple models just for the form (kannst du später in domain/models ziehen) ---
-class Person {
-  final String id;
-  final String name;
-  const Person({required this.id, required this.name});
-}
+import 'package:billpal/shared/domain/entities.dart';
+import 'package:billpal/shared/application/services.dart';
+import '../../bill_service.dart';
+import '../../../../core/logging/app_logger.dart';
 
 class LineItem {
   String description;
@@ -155,6 +152,38 @@ class _AddInvoiceFormState extends State<AddInvoiceForm> {
     super.dispose();
   }
 
+  /// Sichere Konvertierung der User-ID zu int - kritischer Fix für Demo-Mode
+  int _getUserIdSafely(String userId) {
+    // Demo-Mode User IDs sicher zu int konvertieren
+    switch (userId) {
+      case 'user_me':
+      case 'current_user':
+        return 1; // App-User ist immer ID 1
+      case 'friend_1':
+        return 2;
+      case 'friend_2':
+        return 3;
+      case 'friend_3':
+        return 4;
+      case 'friend_4':
+        return 5;
+      case 'friend_5':
+        return 6;
+      case 'friend_6':
+        return 7;
+      default:
+        // Versuche int.parse, fallback zu 1 bei Fehlern
+        try {
+          return int.parse(userId);
+        } catch (e) {
+          AppLogger.bills.warning(
+            '⚠️ User-ID "$userId" nicht parsebar, verwende Fallback ID 1',
+          );
+          return 1;
+        }
+    }
+  }
+
   Future<void> _pickDateTime() async {
     final date = await showDatePicker(
       context: context,
@@ -189,7 +218,7 @@ class _AddInvoiceFormState extends State<AddInvoiceForm> {
 
   double get _total => _items.fold(0.0, (s, i) => s + (i.amount ?? 0.0));
 
-  void _submit() {
+  void _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
     final hasValidItem = _items.any(
@@ -206,50 +235,100 @@ class _AddInvoiceFormState extends State<AddInvoiceForm> {
       );
       return;
     }
+
+    // InvoiceData für Callback erstellen
     final data = InvoiceData(
       title: _titleCtrl.text.trim(),
       dateTime: _dateTime,
       items: List.unmodifiable(_items),
     );
-    widget.onSubmit?.call(data);
-    Navigator.of(context).maybePop();
-  }
 
-  void _populateFormFromReceipt(ReceiptData receiptData) {
-    if (receiptData.restaurantName != null &&
-        receiptData.restaurantName!.isNotEmpty) {
-      _titleCtrl.text = receiptData.restaurantName!;
-    }
+    // BillService aufrufen um in DB zu speichern
+    try {
+      AppLogger.bills.info('🟡 Starte Speichervorgang...');
+      final billService = BillService();
 
-    setState(() {
-      _items.clear();
+      // LineItems zu LineItemData konvertieren
+      AppLogger.bills.debug('🟡 Konvertiere ${_items.length} Items...');
+      final lineItemsData = <LineItemData>[];
 
-      if (receiptData.items.isEmpty) {
-        _items.add(LineItem());
-      } else {
-        for (final receiptItem in receiptData.items) {
-          _items.add(
-            LineItem(
-              description: receiptItem.description,
-              amount: receiptItem.totalPrice,
-              assignee: null,
-            ),
-          );
+      for (int i = 0; i < _items.length; i++) {
+        final item = _items[i];
+        AppLogger.bills.debug(
+          '🟡 Item ${i + 1}: "${item.description}" - Amount: ${item.amount} - Assignee: ${item.assignee?.name} (ID: ${item.assignee?.id})',
+        );
+
+        // Validierung
+        if (item.description.trim().isEmpty ||
+            item.amount == null ||
+            item.amount! <= 0 ||
+            item.assignee == null) {
+          AppLogger.bills.debug('⚠️ Item ${i + 1} übersprungen (ungültig)');
+          continue;
         }
-      }
-    });
 
-    if (!receiptData.isTotalConsistent) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Warnung: Summe (${_currencyFmt.format(receiptData.total)}) '
-            'stimmt nicht mit Positionen überein.',
+        // Person ID zu int konvertieren
+        int? assigneeUserId;
+        try {
+          assigneeUserId = int.parse(item.assignee!.id);
+          AppLogger.bills.debug(
+            '✅ Person ID "${item.assignee!.id}" → $assigneeUserId',
+          );
+        } catch (e) {
+          AppLogger.bills.error(
+            '❌ Fehler bei Person ID Konvertierung: "${item.assignee!.id}" → $e',
+          );
+          // Fallback: Verwende Hash-Code oder feste ID
+          assigneeUserId = item.assignee!.id.hashCode.abs() % 10000;
+          AppLogger.bills.debug('🔧 Fallback Person ID: $assigneeUserId');
+        }
+
+        lineItemsData.add(
+          LineItemData(
+            description: item.description,
+            amount: item.amount!,
+            assigneeUserId: assigneeUserId,
           ),
-          backgroundColor: Colors.orange,
-          duration: const Duration(seconds: 5),
-        ),
+        );
+      }
+
+      AppLogger.bills.debug('🟡 Gültige Items: ${lineItemsData.length}');
+      AppLogger.bills.debug('🟡 Titel: "${_titleCtrl.text.trim()}"');
+      AppLogger.bills.debug('🟡 Datum: $_dateTime');
+
+      // In DB speichern
+      AppLogger.bills.info('🟡 Rufe BillService.saveInvoiceData auf...');
+      final currentUser = await UserService().getCurrentUser();
+      final billId = await billService.saveInvoiceData(
+        title: _titleCtrl.text.trim(),
+        dateTime: _dateTime,
+        userId: _getUserIdSafely(currentUser.id),
+        lineItems: lineItemsData,
       );
+
+      AppLogger.bills.success('✅ Rechnung gespeichert! Bill-ID: $billId');
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Rechnung erfolgreich gespeichert! ID: $billId'),
+            backgroundColor: Colors.green,
+          ),
+        );
+
+        // Callback aufrufen falls gesetzt
+        widget.onSubmit?.call(data);
+        Navigator.of(context).maybePop();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Fehler beim Speichern: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -469,18 +548,23 @@ class _LineItemRowState extends State<_LineItemRow> {
             const SizedBox(width: 8),
             Expanded(
               flex: 3,
-              child: DropdownButtonFormField<Person>(
-                initialValue: _assignee,
-                items: widget.people
-                    .map((p) => DropdownMenuItem(value: p, child: Text(p.name)))
-                    .toList(),
-                onChanged: (p) {
-                  setState(() => _assignee = p);
-                  _emit();
-                },
-                decoration: const InputDecoration(labelText: 'Person'),
-                validator: (v) => v == null ? 'Bitte wählen' : null,
-              ),
+              child: widget.people.isEmpty
+                  ? _buildAddFriendButton()
+                  : DropdownButtonFormField<Person>(
+                      initialValue: _assignee,
+                      items: widget.people
+                          .map(
+                            (p) =>
+                                DropdownMenuItem(value: p, child: Text(p.name)),
+                          )
+                          .toList(),
+                      onChanged: (p) {
+                        setState(() => _assignee = p);
+                        _emit();
+                      },
+                      decoration: const InputDecoration(labelText: 'Person'),
+                      validator: (v) => v == null ? 'Bitte wählen' : null,
+                    ),
             ),
             if (widget.onRemove != null) ...[
               const SizedBox(width: 8),
@@ -494,5 +578,80 @@ class _LineItemRowState extends State<_LineItemRow> {
         ),
       ),
     );
+  }
+
+  Widget _buildAddFriendButton() {
+    return OutlinedButton.icon(
+      onPressed: () => _showAddFriendQuickDialog(),
+      icon: Icon(Icons.person_add, size: 16),
+      label: Text('Freund hinzufügen'),
+      style: OutlinedButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      ),
+    );
+  }
+
+  Future<void> _showAddFriendQuickDialog() async {
+    final userService = UserService();
+
+    final result = await showDialog<Person>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Schnell Freund hinzufügen'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('Du hast noch keine Freunde hinzugefügt.'),
+            const SizedBox(height: 16),
+            TextFormField(
+              decoration: InputDecoration(
+                labelText: 'Name des Freundes',
+                border: OutlineInputBorder(),
+              ),
+              onFieldSubmitted: (name) async {
+                if (name.trim().isNotEmpty) {
+                  try {
+                    final newFriend = await userService.addFriend(
+                      name: name.trim(),
+                    );
+                    Navigator.pop(context, newFriend);
+                  } catch (e) {
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text('Fehler: $e')));
+                  }
+                }
+              },
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Abbrechen'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              // Navigate to full friends management
+              Navigator.pop(context);
+              Navigator.pushNamed(context, '/friends');
+            },
+            child: Text('Freunde verwalten'),
+          ),
+        ],
+      ),
+    );
+
+    if (result != null) {
+      // Refresh parent widget to show new friend
+      // (This is a quick solution - in real app you'd use state management)
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '${result.name} wurde hinzugefügt! Bitte Form neu öffnen.',
+          ),
+        ),
+      );
+    }
   }
 }
