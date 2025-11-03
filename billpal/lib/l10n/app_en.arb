@@ -1,0 +1,309 @@
+{
+  "@@locale": "en",
+  
+  "appTitle": "BillPal",
+  "@appTitle": {
+    "description": "App name"
+  },
+  "appSubtitle": "Shared bills with friends",
+  "@appSubtitle": {
+    "description": "App subtitle"
+  },
+  
+  "cancel": "Cancel",
+  "save": "Save",
+  "close": "Close",
+  "delete": "Delete",
+  "edit": "Edit",
+  "search": "Search",
+  "add": "Add",
+  "remove": "Remove",
+  "back": "Back",
+  "ok": "OK",
+  "yes": "Yes",
+  "no": "No",
+  "confirm": "Confirm",
+  "loading": "Loading...",
+  "error": "Error",
+  "success": "Success",
+  "menu": "Menu",
+  "refresh": "Refresh",
+  
+  "drawerDashboard": "Dashboard",
+  "drawerHistory": "History",
+  "drawerMyFriends": "My Friends",
+  "drawerAppearance": "APPEARANCE",
+  "drawerLanguage": "LANGUAGE",
+  "drawerLanguageInfo": "Language and theme changes take effect immediately app-wide.",
+  
+  "themeSystem": "System",
+  "themeLight": "Light",
+  "themeDark": "Dark",
+  
+  "localeSystem": "System",
+  "localeGerman": "Deutsch",
+  "localeEnglish": "English",
+  
+  "dashboardTitle": "BillPal",
+  "youWillReceive": "You will receive {amount}",
+  "@youWillReceive": {
+    "description": "Shows that the user will receive money",
+    "placeholders": {
+      "amount": {
+        "type": "String",
+        "example": "$50.00"
+      }
+    }
+  },
+  "youOwe": "You owe {amount}",
+  "@youOwe": {
+    "description": "Shows that the user owes money",
+    "placeholders": {
+      "amount": {
+        "type": "String",
+        "example": "$30.00"
+      }
+    }
+  },
+  
+  "currentDebts": "Current Debts",
+  "youOweColon": "You owe:",
+  "owedToYouColon": "Owed to you:",
+  "allBalanced": "All settled! 🎉",
+  "noOpenDebts": "You have no outstanding debts",
+  
+  "recentBills": "Recent Bills",
+  "showAll": "Show all",
+  "noBillsYet": "No bills yet",
+  "createFirstBill": "Create your first shared bill",
+  "billHistory": "Bill History",
+  "owedToMe": "Owed to me",
+  "iOwe": "I owe",
+  "paidByMe": "Paid by me",
+  "paidBy": "Paid by {name}",
+  "@paidBy": {
+    "description": "Shows who paid the bill",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Max"
+      }
+    }
+  },
+  "itemCount": "{count} item",
+  "@itemCount": {
+    "description": "Number of items (singular)",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "1"
+      }
+    }
+  },
+  "itemCountPlural": "{count} items",
+  "@itemCountPlural": {
+    "description": "Number of items (plural)",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "5"
+      }
+    }
+  },
+  
+  "statusDraft": "Draft",
+  "statusShared": "Shared",
+  "statusSettled": "Settled",
+  "statusCancelled": "Cancelled",
+  
+  "addBill": "Add Bill",
+  "shareBill": "Share Bill",
+  "titleLabel": "Title *",
+  "titleHint": "e.g. Pizza night, Airbnb, Gas",
+  "titleRequired": "Title required",
+  "dateTimeLabel": "Date & Time *",
+  "positions": "Items",
+  "addPosition": "Add item",
+  "description": "Description",
+  "descriptionHint": "e.g. Margherita, Toll",
+  "required": "Required",
+  "amountGross": "Amount (Gross)",
+  "invalid": "Invalid",
+  "mustBeGreaterZero": "Must be > 0",
+  "person": "Person",
+  "pleaseSelect": "Please select",
+  "removePosition": "Remove item",
+  "sum": "Total",
+  "atLeastOnePosition": "Please provide at least one valid item.",
+  "billSavedSuccess": "Bill saved successfully! ID: {id}",
+  "@billSavedSuccess": {
+    "description": "Success message after saving",
+    "placeholders": {
+      "id": {
+        "type": "int",
+        "example": "42"
+      }
+    }
+  },
+  "errorSaving": "Error saving: {error}",
+  "@errorSaving": {
+    "description": "Error message when saving",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  
+  "manualEntry": "Enter manually",
+  "takePhoto": "Take photo",
+  "importFromGallery": "Import from gallery/files",
+  "ocrNotSupported": "OCR is not supported on web.\nPlease run on Android or iOS.",
+  "processingReceipt": "Processing receipt...",
+  "noTextRecognized": "No text recognized. Please try again.\nTips: Good lighting, flat receipt, sharp focus.",
+  "couldNotExtractData": "Could not extract receipt data.\nOpen the form to enter manually.",
+  "details": "Details",
+  "ocrRawText": "OCR Raw Text",
+  "errorScanning": "Error scanning: {error}",
+  "@errorScanning": {
+    "description": "Error message when scanning",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  
+  "myFriends": "My Friends",
+  "addFriend": "Add friend",
+  "friendAdded": "{name} has been added",
+  "@friendAdded": {
+    "description": "Success message after adding a friend",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "friendRemoved": "{name} has been removed",
+  "@friendRemoved": {
+    "description": "Success message after removing a friend",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "errorAddingFriend": "Error adding: {error}",
+  "@errorAddingFriend": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorRemovingFriend": "Error removing: {error}",
+  "@errorRemovingFriend": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "removeFriend": "Remove friend",
+  "confirmRemoveFriend": "Do you really want to remove {name} from your friends list?",
+  "@confirmRemoveFriend": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "searchFriends": "Search friends...",
+  "noFriendsYet": "No friends added yet",
+  "addFriendsToShare": "Add friends to share bills",
+  "addFirstFriend": "Add first friend",
+  "noFriendsFound": "No friends found for \"{query}\"",
+  "@noFriendsFound": {
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "tryDifferentSearch": "Try a different search term",
+  "nameLabel": "Name *",
+  "nameRequired": "Name is required",
+  "emailLabel": "Email (optional)",
+  "phoneLabel": "Phone (optional)",
+  "friendCount": "{count} friend",
+  "@friendCount": {
+    "description": "Number of friends (singular)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "friendCountPlural": "{count} friends",
+  "@friendCountPlural": {
+    "description": "Number of friends (plural)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noFriends": "No friends",
+  "manageAll": "Manage all",
+  "quickAddFriend": "Quick add friend",
+  "noFriendsAdded": "You haven't added any friends yet.",
+  "friendName": "Friend's name",
+  "manageFriends": "Manage friends",
+  "friendAddedReopenForm": "{name} has been added! Please reopen the form.",
+  "@friendAddedReopenForm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  
+  "sharedExpenses": "Shared Expenses",
+  
+  "searchBillOrPerson": "Search bill or person...",
+  "all": "All",
+  "shared": "Shared",
+  "settled": "Settled",
+  "draft": "Draft",
+  "noBillsFound": "No bills found",
+  "noBillsAvailable": "No bills available yet",
+  "tryOtherFilters": "Try different search terms or filters",
+  "createFirstBillDashboard": "Create your first bill via the dashboard",
+  
+  "newestFirst": "Newest first",
+  "oldestFirst": "Oldest first",
+  "highestAmount": "Highest amount",
+  "lowestAmount": "Lowest amount",
+  
+  "demoMode": "Demo",
+  "realMode": "Real",
+  "switchToReal": "🚀 Real mode activated! Using real database.",
+  
+  "errorLoadingFriends": "Error loading friends: {error}",
+  "@errorLoadingFriends": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorLoadingBills": "Error loading bills: {error}",
+  "@errorLoadingBills": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  }
+}

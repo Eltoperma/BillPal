@@ -23,6 +23,17 @@ class ReceiptData {
     return diff < 0.05;
   }
 
+  /// Convert to JSON for debugging and serialization
+  Map<String, dynamic> toJson() => {
+    'restaurantName': restaurantName,
+    'total': total,
+    'calculatedTotal': calculatedTotal,
+    'isTotalConsistent': isTotalConsistent,
+    'itemCount': items.length,
+    'items': items.map((item) => item.toJson()).toList(),
+    'rawText': rawText,
+  };
+
   @override
   String toString() =>
       'ReceiptData('
@@ -44,6 +55,14 @@ class ReceiptLineItem {
     this.quantity = 1,
     this.totalPrice,
   });
+
+  /// Convert to JSON for debugging and serialization
+  Map<String, dynamic> toJson() => {
+    'description': description,
+    'quantity': quantity,
+    'unitPrice': unitPrice,
+    'totalPrice': totalPrice,
+  };
 
   @override
   String toString() =>

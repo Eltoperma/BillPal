@@ -20,6 +20,8 @@ class AppLogger {
   static const AppLogger sql = AppLogger._('SQL');
   static const AppLogger ui = AppLogger._('UI');
   static const AppLogger nav = AppLogger._('NAV');
+  static const AppLogger ocr = AppLogger._('OCR');
+  static const AppLogger parser = AppLogger._('PARSER');
   
   // Global Logger für kritische Fehler
   static void globalError(String message, [Object? error, StackTrace? stackTrace]) {

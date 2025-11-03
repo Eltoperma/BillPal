@@ -1,5 +1,6 @@
 import 'package:billpal/core/utils/currency.dart';
 import 'package:billpal/shared/domain/entities.dart';
+import 'package:billpal/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -10,8 +11,9 @@ class RecentBillsList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     if (summary.recentBills.isEmpty) {
-      return _emptyCard();
+      return _emptyCard(context);
     }
 
     // Zeige nur die letzten 5 Rechnungen
@@ -19,19 +21,19 @@ class RecentBillsList extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: _box(),
+      decoration: _box(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'Letzte Rechnungen',
+              Text(
+                l10n.recentBills,
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
-                  color: Colors.black87,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
               if (summary.recentBills.length > 5)
@@ -39,7 +41,7 @@ class RecentBillsList extends StatelessWidget {
                   onPressed: () {
                     Navigator.pushNamed(context, '/history');
                   },
-                  child: const Text('Alle anzeigen'),
+                  child: Text(l10n.showAll),
                 ),
             ],
           ),
@@ -51,36 +53,43 @@ class RecentBillsList extends StatelessWidget {
     );
   }
 
-  Widget _emptyCard() => Container(
-    width: double.infinity,
-    padding: const EdgeInsets.all(24),
-    decoration: _box(),
-    child: Column(
-      children: [
-        Icon(
-          Icons.receipt_long,
-          size: 48,
-          color: Colors.grey.shade400,
-        ),
-        const SizedBox(height: 12),
-        const Text(
-          'Noch keine Rechnungen',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-        ),
-        const SizedBox(height: 4),
-        const Text(
-          'Erstelle deine erste geteilte Rechnung',
-          style: TextStyle(color: Colors.black54),
-        ),
-      ],
-    ),
-  );
+  Widget _emptyCard(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: _box(context),
+      child: Column(
+        children: [
+          Icon(
+            Icons.receipt_long,
+            size: 48,
+            color: Colors.grey.shade400,
+          ),
+          const SizedBox(height: 12),
+          Text(
+            l10n.noBillsYet,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            l10n.createFirstBill,
+            style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6)),
+          ),
+        ],
+      ),
+    );
+  }
 
-  BoxDecoration _box() => BoxDecoration(
-    color: Colors.white,
+  BoxDecoration _box(BuildContext context) => BoxDecoration(
+    color: Theme.of(context).cardColor,
     borderRadius: BorderRadius.circular(16),
-    boxShadow: const [
-      BoxShadow(color: Colors.black12, blurRadius: 12, offset: Offset(0, 6)),
+    boxShadow: [
+      BoxShadow(
+        color: Colors.black.withValues(alpha: 0.1),
+        blurRadius: 12,
+        offset: const Offset(0, 6),
+      ),
     ],
   );
 }
@@ -98,9 +107,11 @@ class _BillRow extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.grey.shade50,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.5),
+        ),
       ),
       child: Row(
         children: [
@@ -108,7 +119,7 @@ class _BillRow extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: statusColor.withOpacity(0.1),
+              color: statusColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(
@@ -137,7 +148,7 @@ class _BillRow extends StatelessWidget {
                     Text(
                       DateFormat('dd.MM.yyyy').format(bill.date),
                       style: TextStyle(
-                        color: Colors.grey.shade600,
+                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                         fontSize: 12,
                       ),
                     ),
@@ -145,7 +156,7 @@ class _BillRow extends StatelessWidget {
                     Text(
                       '${bill.items.length} Position${bill.items.length == 1 ? '' : 'en'}',
                       style: TextStyle(
-                        color: Colors.grey.shade600,
+                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                         fontSize: 12,
                       ),
                     ),
@@ -167,7 +178,7 @@ class _BillRow extends StatelessWidget {
                 ),
               ),
               Text(
-                _getStatusText(bill.status),
+                _getStatusText(bill.status, context),
                 style: TextStyle(
                   color: statusColor,
                   fontSize: 12,
@@ -207,16 +218,17 @@ class _BillRow extends StatelessWidget {
     }
   }
 
-  String _getStatusText(BillStatus status) {
+  String _getStatusText(BillStatus status, BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     switch (status) {
       case BillStatus.draft:
-        return 'Entwurf';
+        return l10n.statusDraft;
       case BillStatus.shared:
-        return 'Geteilt';
+        return l10n.statusShared;
       case BillStatus.settled:
-        return 'Beglichen';
+        return l10n.statusSettled;
       case BillStatus.cancelled:
-        return 'Storniert';
+        return l10n.statusCancelled;
     }
   }
 }

@@ -184,10 +184,10 @@ class _FriendsManagementPageState extends State<FriendsManagementPage> {
                 prefixIcon: Icon(Icons.search),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                ),
-                filled: true,
-                fillColor: colorScheme.surfaceVariant.withOpacity(0.3),
               ),
+              filled: true,
+              fillColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+            ),
             ),
           ),
           

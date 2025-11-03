@@ -1,11 +1,13 @@
+import 'dart:convert';
 import 'package:billpal/shared/domain/entities.dart';
+import 'package:billpal/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import '../../infrastructure/ocr/ocr_service.dart';
 import '../../infrastructure/ocr/receipt_data.dart';
 import '../../infrastructure/parsing/receipt_parser.dart';
 import '../../infrastructure/picking/image_picker_service.dart';
 import '../pages/add_invoice_form.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb, kDebugMode;
 
 /// Welche UI soll für die Quellenwahl genutzt werden?
 //enum AddInvoiceUI { sheet, menu, adaptive }
@@ -15,13 +17,13 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 class AddInvoiceEntryButton extends StatelessWidget {
   final List<Person> people;
   //final AddInvoiceUI ui;
-  final String label;
+  final String? label;
 
   const AddInvoiceEntryButton({
     super.key,
     required this.people,
     //this.ui = AddInvoiceUI.adaptive,
-    this.label = 'Rechnung teilen',
+    this.label,
   });
 
   bool _useMenu(BuildContext context) {
@@ -30,15 +32,17 @@ class AddInvoiceEntryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
+    final buttonLabel = label ?? l10n.shareBill;
     return _useMenu(context)
-        ? _MenuAnchorButton(people: people, label: label)
+        ? _MenuAnchorButton(people: people, label: buttonLabel)
         : FloatingActionButton.extended(
             onPressed: () => _openChoiceSheet(context, people: people),
             icon: const Icon(Icons.add),
             backgroundColor: cs.primary,
             foregroundColor: cs.onPrimary,
-            label: Text(label),
+            label: Text(buttonLabel),
           );
   }
 }
@@ -48,6 +52,7 @@ Future<void> _openChoiceSheet(
   BuildContext context, {
   required List<Person> people,
 }) async {
+  final l10n = AppLocalizations.of(context)!;
   await showModalBottomSheet(
     context: context,
     useSafeArea: true,
@@ -61,7 +66,7 @@ Future<void> _openChoiceSheet(
         children: [
           ListTile(
             leading: const Icon(Icons.edit_outlined),
-            title: const Text('Manuell eingeben'),
+            title: Text(l10n.manualEntry),
             onTap: () async {
               Navigator.pop(ctx);
               await openAddInvoice(context, people: people);
@@ -70,7 +75,7 @@ Future<void> _openChoiceSheet(
           const Divider(height: 1),
           ListTile(
             leading: const Icon(Icons.photo_camera_outlined),
-            title: const Text('Foto aufnehmen'),
+            title: Text(l10n.takePhoto),
             onTap: () async {
               Navigator.pop(ctx);
               await _scanReceipt(context, people: people, fromCamera: true);
@@ -79,7 +84,7 @@ Future<void> _openChoiceSheet(
           const Divider(height: 1),
           ListTile(
             leading: const Icon(Icons.image_outlined),
-            title: const Text('Aus Galerie/Dateien importieren'),
+            title: Text(l10n.importFromGallery),
             onTap: () async {
               Navigator.pop(ctx);
               await _scanReceipt(context, people: people, fromCamera: false);
@@ -88,7 +93,7 @@ Future<void> _openChoiceSheet(
           const SizedBox(height: 8),
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Abbrechen'),
+            child: Text(l10n.cancel),
           ),
           const SizedBox(height: 8),
         ],
@@ -221,7 +226,30 @@ Future<void> _scanReceipt(
       return;
     }
 
+    // Debug: Print raw OCR text to console
+    if (kDebugMode) {
+      print('\n');
+      print('═══════════════════════════════════════════════════════════');
+      print('📄 OCR DETECTED TEXT (Raw Output):');
+      print('═══════════════════════════════════════════════════════════');
+      print(rawText);
+      print('═══════════════════════════════════════════════════════════');
+      print('\n');
+    }
+
     final ReceiptData receiptData = receiptParser.parse(rawText);
+
+    // Debug: Print parsed receipt data as JSON to console
+    if (kDebugMode) {
+      print('\n');
+      print('═══════════════════════════════════════════════════════════');
+      print('📊 PARSED RECEIPT DATA (JSON):');
+      print('═══════════════════════════════════════════════════════════');
+      const encoder = JsonEncoder.withIndent('  ');
+      print(encoder.convert(receiptData.toJson()));
+      print('═══════════════════════════════════════════════════════════');
+      print('\n');
+    }
 
     if (!receiptData.hasData) {
       if (context.mounted) {
