@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:billpal/shared/application/services/configurable_category_service.dart';
-import 'package:billpal/shared/application/services/multi_language_category_service.dart';
+import 'package:billpal/features/settings/application/services/configurable_category_service.dart';
+import 'package:billpal/features/settings/application/services/multi_language_category_service.dart';
 
 /// Seite zur Verwaltung von Kategorien und User-Korrekturen
 class CategoryManagementPage extends StatefulWidget {
@@ -27,22 +27,14 @@ class _CategoryManagementPageState extends State<CategoryManagementPage> {
     setState(() => _isLoading = true);
     
     try {
-      // Vereinfacht: Nutze erstmal nur Deutsch
       _currentLocale = 'de';
       
       _categories = ConfigurableCategoryService.getAllCategories();
-      
-      // User-Keywords aus der Datenbank laden
       await _userCategoryService.loadUserKeywords(_currentLocale);
-      
-      // User-Korrekturen laden
       _userCorrections = await _userCategoryService.getAllCorrections();
       
-      print('Kategorien geladen: ${_categories.length}');
-      print('User-Korrekturen geladen: ${_userCorrections.length}');
-      
     } catch (e) {
-      print('Fehler beim Laden: $e');
+      // Silent error handling
     } finally {
       setState(() => _isLoading = false);
     }

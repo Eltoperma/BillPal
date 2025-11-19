@@ -1,6 +1,5 @@
 import 'package:sqflite/sqflite.dart';
-import '../database_helper.dart';
-import '../../logging/app_logger.dart';
+import 'package:billpal/core/database/database_helper.dart';
 
 /// Repository für User-Category-Daten (Keywords und Korrekturen)
 class UserCategoryRepository {
@@ -27,8 +26,7 @@ class UserCategoryRepository {
       });
     } catch (e) {
       if (e.toString().contains('UNIQUE constraint failed')) {
-        AppLogger.sql.debug('Keyword "$keyword" bereits vorhanden für Kategorie $categoryId');
-        return 0; // Kein Fehler, nur bereits vorhanden
+        return 0; // Keyword bereits vorhanden
       }
       rethrow;
     }

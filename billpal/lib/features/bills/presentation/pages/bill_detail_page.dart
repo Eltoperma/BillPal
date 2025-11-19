@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:billpal/shared/domain/entities.dart';
 import 'package:billpal/shared/application/services.dart';
-import 'package:billpal/shared/application/services/configurable_category_service.dart';
-import 'package:billpal/shared/application/services/multi_language_category_service.dart';
+import 'package:billpal/features/settings/application/services/configurable_category_service.dart';
+import 'package:billpal/features/settings/application/services/multi_language_category_service.dart';
 import 'package:billpal/shared/presentation/dialogs/category_selection_dialog.dart';
 import '../../../../core/logging/app_logger.dart';
 import '../../../../core/utils/currency.dart';

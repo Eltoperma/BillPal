@@ -1,33 +1,27 @@
 import 'package:flutter/material.dart';
-import 'package:billpal/shared/application/services/configurable_category_service.dart';
-import 'package:billpal/core/database/repositories/user_category_repository.dart';
+import 'package:billpal/features/settings/application/services/configurable_category_service.dart';
+import 'package:billpal/features/settings/infrastructure/repositories/user_category_repository.dart';
 import 'package:billpal/shared/application/services/user_service.dart';
 import 'package:billpal/core/logging/app_logger.dart';
 
 /// Service für die Locale-Context-Erkennung
-/// Vorbereitet für zukünftige Internationalisierung ohne breaking changes
 class CategoryLocaleService {
   /// Ermittelt die aktuelle Sprache aus verschiedenen Quellen
-  /// Fallback-Chain: LocaleController -> Scaffold -> MaterialApp -> System -> 'de'
   static String getCurrentLocale(BuildContext? context) {
-    // Future: Hier wird später der LocaleController/l10n integriert
-    // Für jetzt: Verwende einfache Context-basierte Erkennung
     
     if (context != null) {
       try {
         final locale = Localizations.localeOf(context);
         final languageCode = locale.languageCode.toLowerCase();
         
-        // Unterstützte Sprachen prüfen
         if (['de', 'en'].contains(languageCode)) {
           return languageCode;
         }
       } catch (e) {
-        // Fallback falls Localization nicht verfügbar
+        // Localization nicht verfügbar
       }
     }
     
-    // Fallback: Deutsch als Standard
     return 'de';
   }
 
@@ -78,11 +72,10 @@ class MultiLanguageUserCategoryService extends ConfigurableCategoryService {
   final UserCategoryRepository _repository = UserCategoryRepository();
   final UserService _userService = UserService();
   
-  // Cache für Performance (wird aus DB geladen)
   final Map<String, Map<String, List<String>>> _userKeywordsCache = {};
   final List<UserCategoryCorrection> _userCorrectionsCache = [];
 
-  /// Lädt User-Keywords aus der Datenbank für bessere Performance
+  /// Lädt User-Keywords aus der Datenbank
   Future<void> loadUserKeywords(String locale) async {
     try {
       final currentUser = await _userService.getCurrentUser();
@@ -103,17 +96,16 @@ class MultiLanguageUserCategoryService extends ConfigurableCategoryService {
         }
       }
       
-      AppLogger.sql.success('User-Keywords für Locale "$locale" geladen: ${_userKeywordsCache.keys.length} Kategorien');
+      // User-Keywords erfolgreich geladen
     } catch (e) {
       AppLogger.sql.error('Fehler beim Laden der User-Keywords: $e');
     }
   }
 
-  /// Fügt ein User-Keyword in einer bestimmten Sprache hinzu
+  /// Fügt ein User-Keyword hinzu
   Future<void> addUserKeyword(String categoryId, String keyword, String locale) async {
     final keywordLower = keyword.toLowerCase().trim();
     
-    // Leere Keywords ignorieren
     if (keywordLower.isEmpty) return;
     
     try {
@@ -134,7 +126,7 @@ class MultiLanguageUserCategoryService extends ConfigurableCategoryService {
         _userKeywordsCache[categoryId]![locale]!.add(keywordLower);
       }
       
-      AppLogger.sql.success('User-Keyword "$keywordLower" für Kategorie $categoryId hinzugefügt');
+      // User-Keyword erfolgreich hinzugefügt
     } catch (e) {
       AppLogger.sql.error('Fehler beim Hinzufügen des Keywords: $e');
     }
@@ -156,7 +148,7 @@ class MultiLanguageUserCategoryService extends ConfigurableCategoryService {
       // Cache aktualisieren
       _userKeywordsCache[categoryId]?[locale]?.remove(keyword.toLowerCase().trim());
       
-      AppLogger.sql.success('User-Keyword "$keyword" für Kategorie $categoryId entfernt');
+      // User-Keyword erfolgreich entfernt  
     } catch (e) {
       AppLogger.sql.error('Fehler beim Entfernen des Keywords: $e');
     }
@@ -187,7 +179,7 @@ class MultiLanguageUserCategoryService extends ConfigurableCategoryService {
         ));
       }
       
-      AppLogger.sql.success('${_userCorrectionsCache.length} User-Korrekturen geladen');
+      // User-Korrekturen erfolgreich geladen
     } catch (e) {
       AppLogger.sql.error('Fehler beim Laden der User-Korrekturen: $e');
     }
@@ -222,7 +214,7 @@ class MultiLanguageUserCategoryService extends ConfigurableCategoryService {
         timestamp: DateTime.now(),
       ));
       
-      AppLogger.sql.success('User-Korrektur hinzugefügt: "$originalCategory" → "$correctedCategory"');
+      // User-Korrektur erfolgreich hinzugefügt
     } catch (e) {
       AppLogger.sql.error('Fehler beim Hinzufügen der Korrektur: $e');
     }
@@ -244,7 +236,7 @@ class MultiLanguageUserCategoryService extends ConfigurableCategoryService {
       // Cache aktualisieren
       _userCorrectionsCache.removeWhere((c) => c.id == correctionId);
       
-      AppLogger.sql.success('User-Korrektur $correctionId entfernt');
+      // User-Korrektur erfolgreich entfernt
     } catch (e) {
       AppLogger.sql.error('Fehler beim Entfernen der Korrektur: $e');
     }

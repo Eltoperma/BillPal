@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:billpal/shared/application/services/configurable_category_service.dart';
-import 'package:billpal/shared/application/services/multi_language_category_service.dart';
+import 'package:billpal/features/settings/application/services/configurable_category_service.dart';
+import 'package:billpal/features/settings/application/services/multi_language_category_service.dart';
 
 /// Dialog zur Auswahl/Korrektur einer Kategorie
 class CategorySelectionDialog extends StatefulWidget {
