@@ -49,8 +49,9 @@ class DatabaseHelper {
     
     return await openDatabase(
       path,
-      version: 1,
+      version: 2, // Version erhöht für neue Tabellen
       onCreate: _createTables,
+      onUpgrade: _onUpgrade,
     );
   }
 
@@ -112,5 +113,71 @@ class DatabaseHelper {
         FOREIGN KEY (role_id) REFERENCES roles (id)
       )
     ''');
+
+    // user_category_keywords - User-definierte Keywords für Kategorien
+    await db.execute('''
+      CREATE TABLE user_category_keywords (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        category_id TEXT NOT NULL,
+        keyword TEXT NOT NULL,
+        locale TEXT NOT NULL DEFAULT 'de',
+        created_at TEXT NOT NULL,
+        FOREIGN KEY (user_id) REFERENCES users (id),
+        UNIQUE(user_id, category_id, keyword, locale)
+      )
+    ''');
+
+    // user_category_corrections - User-Korrekturen der automatischen Kategorisierung
+    await db.execute('''
+      CREATE TABLE user_category_corrections (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        bill_title TEXT NOT NULL,
+        original_category TEXT NOT NULL,
+        corrected_category TEXT NOT NULL,
+        locale TEXT NOT NULL DEFAULT 'de',
+        created_at TEXT NOT NULL,
+        FOREIGN KEY (user_id) REFERENCES users (id)
+      )
+    ''');
+  }
+
+  /// Führt Datenbank-Migrationen durch
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    AppLogger.sql.info('📈 Database Migration: v$oldVersion → v$newVersion');
+    
+    if (oldVersion < 2) {
+      // Migration zu Version 2: User-Category Tabellen hinzufügen
+      AppLogger.sql.info('➕ Füge User-Category Tabellen hinzu...');
+      
+      await db.execute('''
+        CREATE TABLE user_category_keywords (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          user_id INTEGER NOT NULL,
+          category_id TEXT NOT NULL,
+          keyword TEXT NOT NULL,
+          locale TEXT NOT NULL DEFAULT 'de',
+          created_at TEXT NOT NULL,
+          FOREIGN KEY (user_id) REFERENCES users (id),
+          UNIQUE(user_id, category_id, keyword, locale)
+        )
+      ''');
+
+      await db.execute('''
+        CREATE TABLE user_category_corrections (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          user_id INTEGER NOT NULL,
+          bill_title TEXT NOT NULL,
+          original_category TEXT NOT NULL,
+          corrected_category TEXT NOT NULL,
+          locale TEXT NOT NULL DEFAULT 'de',
+          created_at TEXT NOT NULL,
+          FOREIGN KEY (user_id) REFERENCES users (id)
+        )
+      ''');
+      
+      AppLogger.sql.success('✅ User-Category Tabellen erfolgreich hinzugefügt');
+    }
   }
 }

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:billpal/shared/domain/entities.dart';
 import 'package:billpal/shared/application/services.dart';
+import 'package:billpal/shared/application/services/configurable_category_service.dart';
+import 'package:billpal/shared/application/services/multi_language_category_service.dart';
+import 'package:billpal/shared/presentation/dialogs/category_selection_dialog.dart';
 import '../../../../core/logging/app_logger.dart';
 import '../../../../core/utils/currency.dart';
 import 'package:intl/intl.dart';
@@ -73,12 +76,45 @@ class _BillDetailPageState extends State<BillDetailPage> {
     }
   }
 
+  Future<void> _showCategoryDialog() async {
+    final currentLocale = CategoryLocaleService.getCurrentLocale(context);
+    final currentCategory = ConfigurableCategoryService.categorizeTitle(_bill.title, locale: currentLocale);
+    
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => CategorySelectionDialog(
+        currentCategory: currentCategory,
+        billTitle: _bill.title,
+      ),
+    );
+
+    if (result != null && result != currentCategory) {
+      // User hat Kategorie korrigiert
+      final userService = MultiLanguageUserCategoryService();
+      await userService.addCorrection(_bill.title, currentCategory, result, currentLocale);
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('✅ Kategorie zu "$result" geändert'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(_bill.title),
         elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.category_outlined),
+            tooltip: 'Kategorie bearbeiten',
+            onPressed: _showCategoryDialog,
+          ),
+        ],
       ),
       body: _isLoading 
         ? const Center(child: CircularProgressIndicator())

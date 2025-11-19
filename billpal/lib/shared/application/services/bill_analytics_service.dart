@@ -1,5 +1,6 @@
 import 'package:billpal/shared/domain/entities.dart';
 import 'package:billpal/shared/application/services/bill_sharing_service.dart';
+import 'package:billpal/shared/application/services/multi_language_category_service.dart';
 import 'package:flutter/material.dart';
 
 /// Service für Bill-Sharing Analysen und Berechnungen
@@ -9,6 +10,7 @@ class BillSharingAnalyticsService {
   BillSharingAnalyticsService._internal();
 
   final BillSharingService _billService = BillSharingService();
+  final MultiLanguageUserCategoryService _categoryService = MultiLanguageUserCategoryService();
 
   /// Generiert eine Zusammenfassung aller geteilten Rechnungen
   Future<BillSharingSummary> getDashboardSummary() async {
@@ -119,7 +121,7 @@ class BillSharingAnalyticsService {
     final Map<String, Set<String>> categoryFriends = {};
     
     for (final bill in bills) {
-      final category = _categorizeByTitle(bill.title);
+      final category = await _categorizeByTitle(bill.title);
       categoryTotals[category] = (categoryTotals[category] ?? 0.0) + bill.totalAmount;
       categoryBillCounts[category] = (categoryBillCounts[category] ?? 0) + 1;
       
@@ -151,146 +153,10 @@ class BillSharingAnalyticsService {
       ..sort((a, b) => b.amount.compareTo(a.amount));
   }
 
-  String _categorizeByTitle(String title) {
-    final lowerTitle = title.toLowerCase();
-    
-    // 🍕 Restaurant & Essen - Moderner und alltagstauglicher
-    if (lowerTitle.contains('restaurant') || 
-        lowerTitle.contains('pizza') || 
-        lowerTitle.contains('döner') ||
-        lowerTitle.contains('kebab') ||
-        lowerTitle.contains('burger') ||
-        lowerTitle.contains('mcdonalds') ||
-        lowerTitle.contains('kfc') ||
-        lowerTitle.contains('subway') ||
-        lowerTitle.contains('sushi') ||
-        lowerTitle.contains('café') ||
-        lowerTitle.contains('coffee') ||
-        lowerTitle.contains('starbucks') ||
-        lowerTitle.contains('bar') ||
-        lowerTitle.contains('essen') ||
-        lowerTitle.contains('food') ||
-        lowerTitle.contains('meal') ||
-        lowerTitle.contains('lunch') ||
-        lowerTitle.contains('dinner') ||
-        lowerTitle.contains('breakfast') ||
-        lowerTitle.contains('frühstück') ||
-        lowerTitle.contains('mittagessen') ||
-        lowerTitle.contains('abendessen') ||
-        lowerTitle.contains('bäcker') ||
-        lowerTitle.contains('metzger') ||
-        lowerTitle.contains('imbiss') ||
-        lowerTitle.contains('bistro') ||
-        lowerTitle.contains('lieferando') ||
-        lowerTitle.contains('delivery') ||
-        lowerTitle.contains('takeaway') ||
-        lowerTitle.contains('getränk') ||
-        lowerTitle.contains('drink') ||
-        lowerTitle.contains('bier') ||
-        lowerTitle.contains('wine') ||
-        lowerTitle.contains('wein') ||
-        lowerTitle.contains('cocktail')) {
-      return 'Restaurant & Essen';
-    }
-    
-    // 🎬 Unterhaltung & Freizeit
-    if (lowerTitle.contains('kino') || 
-        lowerTitle.contains('cinema') ||
-        lowerTitle.contains('movie') ||
-        lowerTitle.contains('film') ||
-        lowerTitle.contains('bowling') || 
-        lowerTitle.contains('party') ||
-        lowerTitle.contains('club') ||
-        lowerTitle.contains('disco') ||
-        lowerTitle.contains('concert') ||
-        lowerTitle.contains('konzert') ||
-        lowerTitle.contains('theater') ||
-        lowerTitle.contains('museum') ||
-        lowerTitle.contains('zoo') ||
-        lowerTitle.contains('park') ||
-        lowerTitle.contains('festival') ||
-        lowerTitle.contains('event') ||
-        lowerTitle.contains('ticket') ||
-        lowerTitle.contains('netflix') ||
-        lowerTitle.contains('spotify') ||
-        lowerTitle.contains('game') ||
-        lowerTitle.contains('spiel')) {
-      return 'Unterhaltung';
-    }
-    
-    // 🚗 Transport & Mobilität
-    if (lowerTitle.contains('tankstelle') || 
-        lowerTitle.contains('tanken') ||
-        lowerTitle.contains('benzin') ||
-        lowerTitle.contains('diesel') ||
-        lowerTitle.contains('uber') || 
-        lowerTitle.contains('taxi') ||
-        lowerTitle.contains('bolt') ||
-        lowerTitle.contains('bus') ||
-        lowerTitle.contains('bahn') ||
-        lowerTitle.contains('zug') ||
-        lowerTitle.contains('train') ||
-        lowerTitle.contains('ticket') ||
-        lowerTitle.contains('fahrkarte') ||
-        lowerTitle.contains('transport') ||
-        lowerTitle.contains('parking') ||
-        lowerTitle.contains('parken') ||
-        lowerTitle.contains('maut') ||
-        lowerTitle.contains('toll') ||
-        lowerTitle.contains('car') ||
-        lowerTitle.contains('auto')) {
-      return 'Transport';
-    }
-    
-    // 🛒 Einkaufen & Shopping
-    if (lowerTitle.contains('supermarkt') || 
-        lowerTitle.contains('einkauf') || 
-        lowerTitle.contains('shopping') ||
-        lowerTitle.contains('rewe') ||
-        lowerTitle.contains('edeka') ||
-        lowerTitle.contains('aldi') ||
-        lowerTitle.contains('lidl') ||
-        lowerTitle.contains('penny') ||
-        lowerTitle.contains('netto') ||
-        lowerTitle.contains('kaufland') ||
-        lowerTitle.contains('real') ||
-        lowerTitle.contains('drogerie') ||
-        lowerTitle.contains('dm') ||
-        lowerTitle.contains('rossmann') ||
-        lowerTitle.contains('müller') ||
-        lowerTitle.contains('amazon') ||
-        lowerTitle.contains('zalando') ||
-        lowerTitle.contains('h&m') ||
-        lowerTitle.contains('zara') ||
-        lowerTitle.contains('ikea') ||
-        lowerTitle.contains('saturn') ||
-        lowerTitle.contains('mediamarkt') ||
-        lowerTitle.contains('apotheke') ||
-        lowerTitle.contains('pharmacy')) {
-      return 'Einkaufen';
-    }
-    
-    // 🏠 Wohnen & Haushalt
-    if (lowerTitle.contains('miete') ||
-        lowerTitle.contains('rent') ||
-        lowerTitle.contains('nebenkosten') ||
-        lowerTitle.contains('strom') ||
-        lowerTitle.contains('gas') ||
-        lowerTitle.contains('wasser') ||
-        lowerTitle.contains('heizung') ||
-        lowerTitle.contains('internet') ||
-        lowerTitle.contains('wifi') ||
-        lowerTitle.contains('handy') ||
-        lowerTitle.contains('mobilfunk') ||
-        lowerTitle.contains('versicherung') ||
-        lowerTitle.contains('insurance') ||
-        lowerTitle.contains('bank') ||
-        lowerTitle.contains('gebühr') ||
-        lowerTitle.contains('fee')) {
-      return 'Wohnen & Fixkosten';
-    }
-    
-    return 'Sonstiges';
+  Future<String> _categorizeByTitle(String title) async {
+    // Verwende den MultiLanguageUserCategoryService mit User-Keywords
+    await _categoryService.loadUserKeywords('de'); // Keywords laden
+    return _categoryService.categorizeWithUserKeywords(title, locale: 'de');
   }
 
   /// Erstellt Pie-Chart-Daten
