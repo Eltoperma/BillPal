@@ -6,6 +6,7 @@ import 'package:billpal/features/settings/application/services/multi_language_ca
 import 'package:billpal/shared/presentation/dialogs/category_selection_dialog.dart';
 import '../../../../core/logging/app_logger.dart';
 import '../../../../core/utils/currency.dart';
+import '../../../../core/mixins/auto_refresh_mixin.dart';
 import 'package:intl/intl.dart';
 
 /// Detailansicht einer einzelnen Rechnung mit Posten und Settlement-Funktionen
@@ -21,11 +22,19 @@ class BillDetailPage extends StatefulWidget {
   State<BillDetailPage> createState() => _BillDetailPageState();
 }
 
-class _BillDetailPageState extends State<BillDetailPage> {
+class _BillDetailPageState extends State<BillDetailPage> with AutoRefreshMixin {
   final BillSharingService _billService = BillSharingService();
   late SharedBill _bill;
   List<BillPosition> _positions = [];
   bool _isLoading = true;
+
+  @override
+  List<String> get refreshEvents => ['bills_changed', 'debts_changed'];
+
+  @override
+  Future<void> onDataRefresh() async {
+    await _loadBillDetails();
+  }
 
   @override
   void initState() {

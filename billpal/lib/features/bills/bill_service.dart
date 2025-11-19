@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import '../../core/database/repositories/repositories.dart';
 import '../../core/database/repositories/mock_repositories.dart';
 import '../../core/logging/app_logger.dart';
+import '../../core/services/data_refresh_service.dart';
 
 /// Service für Bill-Operationen mit Business-Logik
 /// Koordiniert mehrere Repositories und verwaltet Transaktionen
@@ -9,6 +10,7 @@ class BillService {
   // Web: Mock-Repositories, Desktop: Echte Repositories
   late final dynamic _billRepository;
   late final dynamic _positionRepository;
+  final DataRefreshService _refreshService = DataRefreshService();
 
   BillService() {
     if (kIsWeb) {
@@ -102,6 +104,11 @@ class BillService {
     }
     
     AppLogger.bills.success('🎉 Alle Daten erfolgreich gespeichert! Bill-ID: $billId');
+    
+    // UI Refresh triggern nach Bill-Erstellung
+    _refreshService.notifyBillsChanged();
+    _refreshService.notifyDebtsChanged();
+    
     return billId;
   }
 

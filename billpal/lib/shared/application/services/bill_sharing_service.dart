@@ -7,6 +7,7 @@ import 'package:billpal/features/bills/bill_service.dart';
 import 'package:billpal/core/logging/app_logger.dart';
 import 'package:billpal/core/database/repositories/repositories.dart';
 import 'package:billpal/core/database/repositories/mock_repositories.dart';
+import 'package:billpal/core/services/data_refresh_service.dart';
 
 /// Service für die Verwaltung von geteilten Rechnungen zwischen Freunden
 /// 
@@ -21,6 +22,7 @@ class BillSharingService {
   }
 
   final UserService _userService = UserService(); // Zentrale User-Verwaltung
+  final DataRefreshService _refreshService = DataRefreshService();
   final List<SharedBill> _sharedBills = [];
   final Random _random = Random();
   late final dynamic _positionRepo; // Mock oder Real Repository
@@ -607,6 +609,10 @@ class BillSharingService {
         // Dann prüfen ob die gesamte Bill jetzt beglichen ist
         await _checkAndUpdateBillSettlementStatus(positionId);
         
+        // UI Refresh triggern nach Settlement-Änderung
+        _refreshService.notifyDebtsChanged();
+        _refreshService.notifyBillsChanged();
+        
       } else {
         AppLogger.bills.warning('⚠️ Position $positionId nicht gefunden');
       }
@@ -643,6 +649,10 @@ class BillSharingService {
         
         // In-Memory Bills aktualisieren
         await _updateInMemoryBillStatus(billId.toString(), BillStatus.settled);
+        
+        // UI Refresh triggern
+        _refreshService.notifyBillsChanged();
+        _refreshService.notifyDebtsChanged();
         
       } else if (settledPositions.isNotEmpty && openPositions.isNotEmpty) {
         // Teilweise beglichen
