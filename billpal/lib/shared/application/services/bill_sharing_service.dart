@@ -17,12 +17,14 @@ class BillSharingService {
   factory BillSharingService() => _instance;
   BillSharingService._internal() {
     _positionRepo = kIsWeb ? MockPositionRepository() : PositionRepository();
+    _billRepo = kIsWeb ? MockBillRepository() : BillRepository();
   }
 
   final UserService _userService = UserService(); // Zentrale User-Verwaltung
   final List<SharedBill> _sharedBills = [];
   final Random _random = Random();
   late final dynamic _positionRepo; // Mock oder Real Repository
+  late final dynamic _billRepo; // Mock oder Real Repository
 
   /// Initialisiert den Service mit Demo-Daten oder lädt echte Rechnungen
   /// 
@@ -318,6 +320,10 @@ class BillSharingService {
         AppLogger.bills.debug('📍 Fallback-Item: Keine Positionen gefunden, keine Schulden');
       }
       
+      // Status aus Datenbank laden oder fallback
+      final statusString = rawBill['status'] as String? ?? 'shared';
+      final status = _stringToBillStatus(statusString);
+      
       final sharedBill = SharedBill(
         id: billId.toString(),
         title: rawBill['title'] ?? 'Rechnung',
@@ -327,7 +333,7 @@ class BillSharingService {
         eventName: rawBill['title'],
         paidBy: paidBy,
         items: items,
-        status: BillStatus.shared,
+        status: status,
         createdAt: DateTime.tryParse(rawBill['date'] ?? '') ?? DateTime.now(),
       );
       
@@ -632,8 +638,8 @@ class BillSharingService {
         // Alle Positionen sind beglichen!
         AppLogger.bills.success('🎉 Bill $billId ist vollständig beglichen! Status wird aktualisiert.');
         
-        // TODO: Bill-Status in Datenbank aktualisieren (falls Bills-Tabelle erweitert wird)
-        // Für jetzt: Nur loggen
+        // Bill-Status in Datenbank persistent speichern
+        await _billRepo.updateBillStatus(billId, 'settled');
         
         // In-Memory Bills aktualisieren
         await _updateInMemoryBillStatus(billId.toString(), BillStatus.settled);
@@ -641,11 +647,28 @@ class BillSharingService {
       } else if (settledPositions.isNotEmpty && openPositions.isNotEmpty) {
         // Teilweise beglichen
         AppLogger.bills.info('📊 Bill $billId ist teilweise beglichen');
-        await _updateInMemoryBillStatus(billId.toString(), BillStatus.shared); // Bleibt "shared" (teilweise)
+        await _billRepo.updateBillStatus(billId, 'shared'); // Bleibt "shared"
+        await _updateInMemoryBillStatus(billId.toString(), BillStatus.shared);
       }
       
     } catch (e) {
       AppLogger.bills.error('Fehler beim Prüfen des Bill-Settlement-Status: $e');
+    }
+  }
+
+  /// Konvertiert String zu BillStatus Enum
+  BillStatus _stringToBillStatus(String statusString) {
+    switch (statusString.toLowerCase()) {
+      case 'draft':
+        return BillStatus.draft;
+      case 'shared':
+        return BillStatus.shared;
+      case 'settled':
+        return BillStatus.settled;
+      case 'cancelled':
+        return BillStatus.cancelled;
+      default:
+        return BillStatus.shared;
     }
   }
 

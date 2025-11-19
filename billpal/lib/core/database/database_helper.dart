@@ -49,7 +49,7 @@ class DatabaseHelper {
     
     return await openDatabase(
       path,
-      version: 2, // Version erhöht für neue Tabellen
+      version: 3, // Version erhöht für Bill-Status-Feld
       onCreate: _createTables,
       onUpgrade: _onUpgrade,
     );
@@ -84,6 +84,7 @@ class DatabaseHelper {
         date TEXT NOT NULL,
         user_id INTEGER NOT NULL,
         pic TEXT,
+        status TEXT NOT NULL DEFAULT 'shared',
         FOREIGN KEY (user_id) REFERENCES users (id)
       )
     ''');
@@ -178,6 +179,17 @@ class DatabaseHelper {
       ''');
       
       AppLogger.sql.success('✅ User-Category Tabellen erfolgreich hinzugefügt');
+    }
+    
+    if (oldVersion < 3) {
+      // Migration zu Version 3: Bill-Status-Feld hinzufügen
+      AppLogger.sql.info('➕ Füge Status-Feld zu Bills-Tabelle hinzu...');
+      
+      await db.execute('''
+        ALTER TABLE bills ADD COLUMN status TEXT NOT NULL DEFAULT 'shared'
+      ''');
+      
+      AppLogger.sql.success('✅ Bill-Status-Feld erfolgreich hinzugefügt');
     }
   }
 }
