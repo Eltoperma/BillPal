@@ -2,6 +2,7 @@ import 'package:billpal/core/theme/app_theme.dart';
 import 'package:billpal/features/dashboard/presentation/pages/dashboard_page.dart';
 import 'package:billpal/features/friends/presentation/pages/friends_management_page.dart';
 import 'package:billpal/features/bills/presentation/pages/bill_history_page.dart';
+import 'package:billpal/features/bills/presentation/pages/bill_detail_page.dart';
 import 'package:billpal/features/settings/presentation/pages/category_management_page.dart';
 import 'package:billpal/shared/domain/entities.dart';
 import 'package:billpal/core/theme/theme_controller.dart';
@@ -65,6 +66,11 @@ class BillPalApp extends StatelessWidget {
               case '/categories':
                 return MaterialPageRoute(
                   builder: (_) => const CategoryManagementPage(),
+                );
+              case '/bill-detail':
+                final bill = settings.arguments as SharedBill;
+                return MaterialPageRoute(
+                  builder: (_) => BillDetailPage(bill: bill),
                 );
               default:
                 return MaterialPageRoute(
