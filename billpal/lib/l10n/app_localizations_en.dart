@@ -233,10 +233,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pleaseSelect => 'Please select';
 
   @override
-  String get removePosition => 'Remove item';
+  String get removePosition => 'Remove position';
 
   @override
   String get sum => 'Total';
+
+  @override
+  String get whoPaidLabel => 'Who paid?';
+
+  @override
+  String get whoPaidHint => 'Select the person who paid the bill';
+
+  @override
+  String get iPaid => 'I paid';
+
+  @override
+  String get someoneElsePaid => 'Someone else paid';
 
   @override
   String get atLeastOnePosition => 'Please provide at least one valid item.';

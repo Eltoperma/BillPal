@@ -269,10 +269,20 @@ class BillSharingService {
       final realTotal = await billService.getInvoiceTotal(billId);
       AppLogger.sql.debug('Echte Gesamtsumme für Bill $billId: $realTotal€');
       
-      // App-User Logic: DU erstellst Rechnung → DU hast bezahlt → DIR wird geschuldet
-      final paidBy = await getCurrentUser(); // Immer der aktuelle App-User
+      // Dynamische paidBy Logik basierend auf paid_by_user_id
+      final paidByUserId = rawBill['paid_by_user_id'] as int?;
+      Person paidBy;
       
-      AppLogger.sql.debug('Rechnung bezahlt von: ${paidBy.name} (App-User)');
+      if (paidByUserId != null) {
+        // Finde Person basierend auf paid_by_user_id
+        final paidByPerson = await _findPersonByUserId(paidByUserId);
+        paidBy = paidByPerson ?? await getCurrentUser(); // Fallback auf aktuellen User
+        AppLogger.sql.debug('Rechnung bezahlt von: ${paidBy.name} (paid_by_user_id: $paidByUserId)');
+      } else {
+        // Fallback: Aktueller User (alte Logik für bestehende Rechnungen)
+        paidBy = await getCurrentUser();
+        AppLogger.sql.debug('Rechnung bezahlt von: ${paidBy.name} (Fallback: kein paid_by_user_id)');
+      }
       
       // Lade echte Positionen und Personen
       final completeInvoice = await billService.getCompleteInvoice(billId);
@@ -292,8 +302,8 @@ class BillSharingService {
         if (assignedPerson != null) {
           allInvolvedPeople.add(assignedPerson);
           
-          // App-User Logic: 
-          // - paidBy = App-User (DU hast bezahlt)
+          // Dynamische Schulden-Logic: 
+          // - paidBy = Person die bezahlt hat (aus paid_by_user_id)
           // - sharedWith = assignedPerson (WER schuldet für diesen Posten)
           
           items.add(BillItem(
@@ -304,9 +314,9 @@ class BillSharingService {
           ));
           
           if (assignedPerson.id == paidBy.id) {
-            AppLogger.bills.debug('Position: "${pos['desc']}" → DU selbst (${posAmount}€) [KEINE SCHULD]');
+            AppLogger.bills.debug('Position: "${pos['desc']}" → ${assignedPerson.name} hat selbst bezahlt (${posAmount}€) [KEINE SCHULD]');
           } else {
-            AppLogger.bills.debug('Position: "${pos['desc']}" → ${assignedPerson.name} schuldet DIR (${posAmount}€) ✅');
+            AppLogger.bills.debug('Position: "${pos['desc']}" → ${assignedPerson.name} schuldet ${paidBy.name} (${posAmount}€) ✅');
           }
         }
       }
@@ -722,10 +732,15 @@ class BillSharingService {
         final assignedUser = await _userService.getUserById(pos['user_id']);
         final amount = (pos['amount'] as num).toDouble();
         
-        if (assignedUser != null && assignedUser.id != currentUser.id) {
-          // Nur wenn jemand anderes zugeordnet ist (nicht der App-User selbst)
+        if (assignedUser != null) {
+          // Berechne Schulden basierend auf Schuldner (assignedUser)
           debts[assignedUser] = (debts[assignedUser] ?? 0.0) + amount;
-          AppLogger.bills.debug('💸 ${assignedUser.name} schuldet ${amount}€ für "${pos['desc']}"');
+          
+          if (assignedUser.id == currentUser.id) {
+            AppLogger.bills.debug('💸 Ich schulde ${amount}€ für "${pos['desc']}"');
+          } else {
+            AppLogger.bills.debug('💸 ${assignedUser.name} schuldet ${amount}€ für "${pos['desc']}"');
+          }
         }
       }
       

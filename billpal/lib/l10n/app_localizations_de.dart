@@ -238,6 +238,18 @@ class AppLocalizationsDe extends AppLocalizations {
   String get sum => 'Summe';
 
   @override
+  String get whoPaidLabel => 'Wer hat bezahlt?';
+
+  @override
+  String get whoPaidHint => 'Person auswählen, die die Rechnung bezahlt hat';
+
+  @override
+  String get iPaid => 'Ich habe bezahlt';
+
+  @override
+  String get someoneElsePaid => 'Jemand anderes hat bezahlt';
+
+  @override
   String get atLeastOnePosition =>
       'Bitte mindestens eine gültige Position angeben.';
 

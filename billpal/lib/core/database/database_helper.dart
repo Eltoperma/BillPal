@@ -57,7 +57,7 @@ class DatabaseHelper {
     
     return await openDatabase(
       path,
-      version: 3, // Version erhöht für Bill-Status-Feld
+      version: 4, // Version erhöht für paid_by_user_id Feld
       onCreate: _createTables,
       onUpgrade: _onUpgrade,
     );
@@ -93,7 +93,9 @@ class DatabaseHelper {
         user_id INTEGER NOT NULL,
         pic TEXT,
         status TEXT NOT NULL DEFAULT 'shared',
-        FOREIGN KEY (user_id) REFERENCES users (id)
+        paid_by_user_id INTEGER,
+        FOREIGN KEY (user_id) REFERENCES users (id),
+        FOREIGN KEY (paid_by_user_id) REFERENCES users (id)
       )
     ''');
 
@@ -198,6 +200,17 @@ class DatabaseHelper {
       ''');
       
       AppLogger.sql.success('✅ Bill-Status-Feld erfolgreich hinzugefügt');
+    }
+    
+    if (oldVersion < 4) {
+      // Migration zu Version 4: paid_by_user_id Feld hinzufügen
+      AppLogger.sql.info('➕ Füge paid_by_user_id Feld zu Bills-Tabelle hinzu...');
+      
+      await db.execute('''
+        ALTER TABLE bills ADD COLUMN paid_by_user_id INTEGER REFERENCES users (id)
+      ''');
+      
+      AppLogger.sql.success('✅ paid_by_user_id Feld erfolgreich hinzugefügt');
     }
   }
 }

@@ -134,6 +134,10 @@
   "pleaseSelect": "Bitte wählen",
   "removePosition": "Position entfernen",
   "sum": "Summe",
+  "whoPaidLabel": "Wer hat bezahlt?",
+  "whoPaidHint": "Person auswählen, die die Rechnung bezahlt hat",
+  "iPaid": "Ich habe bezahlt",
+  "someoneElsePaid": "Jemand anderes hat bezahlt",
   "atLeastOnePosition": "Bitte mindestens eine gültige Position angeben.",
   "billSavedSuccess": "Rechnung erfolgreich gespeichert! ID: {id}",
   "@billSavedSuccess": {

@@ -132,8 +132,12 @@
   "mustBeGreaterZero": "Must be > 0",
   "person": "Person",
   "pleaseSelect": "Please select",
-  "removePosition": "Remove item",
+  "removePosition": "Remove position",
   "sum": "Total",
+  "whoPaidLabel": "Who paid?",
+  "whoPaidHint": "Select the person who paid the bill",
+  "iPaid": "I paid",
+  "someoneElsePaid": "Someone else paid",
   "atLeastOnePosition": "Please provide at least one valid item.",
   "billSavedSuccess": "Bill saved successfully! ID: {id}",
   "@billSavedSuccess": {

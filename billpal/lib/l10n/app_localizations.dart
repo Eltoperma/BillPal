@@ -536,6 +536,30 @@ abstract class AppLocalizations {
   /// **'Summe'**
   String get sum;
 
+  /// No description provided for @whoPaidLabel.
+  ///
+  /// In de, this message translates to:
+  /// **'Wer hat bezahlt?'**
+  String get whoPaidLabel;
+
+  /// No description provided for @whoPaidHint.
+  ///
+  /// In de, this message translates to:
+  /// **'Person auswählen, die die Rechnung bezahlt hat'**
+  String get whoPaidHint;
+
+  /// No description provided for @iPaid.
+  ///
+  /// In de, this message translates to:
+  /// **'Ich habe bezahlt'**
+  String get iPaid;
+
+  /// No description provided for @someoneElsePaid.
+  ///
+  /// In de, this message translates to:
+  /// **'Jemand anderes hat bezahlt'**
+  String get someoneElsePaid;
+
   /// No description provided for @atLeastOnePosition.
   ///
   /// In de, this message translates to:

@@ -30,6 +30,7 @@ class BillService {
     required String title,
     required DateTime dateTime,
     required int userId, // Der User der die Rechnung erstellt
+    int? paidByUserId, // Wer hat bezahlt (optional, default = userId)
     required List<LineItemData> lineItems,
     String? picturePath,
   }) async {
@@ -52,10 +53,12 @@ class BillService {
     AppLogger.bills.success('✅ Validierung OK');
     
     // 2. Bill erstellen
+    final actualPaidByUserId = paidByUserId ?? userId; // Fallback auf Ersteller
     final billData = {
       'title': title.trim(),
       'date': dateTime.toIso8601String(),
       'user_id': userId,
+      'paid_by_user_id': actualPaidByUserId,
       'pic': picturePath,
     };
     
