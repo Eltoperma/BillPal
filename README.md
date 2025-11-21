@@ -33,6 +33,9 @@ basiert auf Flutter und nutzt State-Management nach Bedarf.
 
 Die Architektur lehnt sich an Feature Driven Design an. Funktionen wie Belegerfassung, OCR-Verarbeitung, Posten-Zuweisung oder Berechnung werden als eigene Feature-Bereiche umgesetzt. Jedes Feature bündelt seine Datenmodelle, Logik und UI-Teile, wodurch die App übersichtlich bleibt und sich einzelne Bereiche unabhängig weiterentwickeln lassen.
 
+### Prozess - Rechnung anlegen
+![Architekturdiagramm](Prozess-Rechnung-anlegen.png)
+
 ---
 
 ## Installationsanleitung
@@ -63,13 +66,15 @@ Jegliche Logs werden zentral über einen App-Logger abgewickelt, dieser ist nur 
 
 - Die Berechnung der eigenen Schulden funktioniert manchmal nicht
 - Rechnung begleichen und anschließend Rückgängig machen, wird in der Summe nicht berücksichtigt
-- Das Parsing funktioniert bei einigen Rechnungen nicht vollständig.
+- Das Parsing funktioniert bei einigen Rechnungen nicht vollständig
+- Kreisdiagramm wird manchmal erst nach dem Refresh richtig berechnet
 
 ---
 
 ## Ausblick 
 
 - Rechnung via QR-Code teilen ist noch nicht eingebaut (erneut krankheitsbedigt)
+- Effizienteres Caching für weniger Datenbankaufrufe
 
 ---
 
