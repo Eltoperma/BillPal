@@ -68,6 +68,7 @@ Jegliche Logs werden zentral über einen App-Logger abgewickelt, dieser ist nur 
 - Rechnung begleichen und anschließend Rückgängig machen, wird in der Summe nicht berücksichtigt
 - Das Parsing funktioniert bei einigen Rechnungen nicht vollständig
 - Kreisdiagramm wird manchmal erst nach dem Refresh richtig berechnet
+- Es muss erst angegeben werden wer die Rechnung bezahlt hat, bevor die einzelnen Positionen zugeordnet werden können
 
 ---
 
