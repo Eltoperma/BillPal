@@ -499,6 +499,7 @@ class _AddInvoiceFormState extends State<AddInvoiceForm> {
                 key: ValueKey('line-$i'),
                 item: _items[i],
                 people: widget.people,
+                paidByPerson: _paidByPerson,
                 onChanged: (updated) => setState(() => _items[i] = updated),
                 onRemove: _items.length > 1 ? () => _removeItem(i) : null,
               ),
@@ -541,12 +542,14 @@ class _AddInvoiceFormState extends State<AddInvoiceForm> {
 class _LineItemRow extends StatefulWidget {
   final LineItem item;
   final List<Person> people;
+  final Person? paidByPerson;
   final void Function(LineItem) onChanged;
   final VoidCallback? onRemove;
   const _LineItemRow({
     super.key,
     required this.item,
     required this.people,
+    required this.paidByPerson,
     required this.onChanged,
     this.onRemove,
   });
@@ -588,6 +591,35 @@ class _LineItemRowState extends State<_LineItemRow> {
         assignee: _assignee,
       ),
     );
+  }
+
+  /// Bestimmt verfügbare Zuordnungsoptionen basierend auf dem Zahler
+  List<DropdownMenuItem<Person>> _getAvailableAssigneeOptions() {
+    if (widget.paidByPerson?.id == 'current_user') {
+      // Ich habe bezahlt → andere sind Schuldner → alle Freunde verfügbar
+      return widget.people.map(
+        (p) => DropdownMenuItem(value: p, child: Text(p.name)),
+      ).toList();
+    } else if (widget.paidByPerson != null) {
+      // Jemand anderes hat bezahlt → nur "Ich" ist verfügbar als Schuldner
+      return [
+        DropdownMenuItem(
+          value: _currentUserPerson,
+          child: const Text('Ich'),
+        ),
+      ];
+    } else {
+      // Kein Zahler ausgewählt → alle Optionen verfügbar
+      return [
+        DropdownMenuItem(
+          value: _currentUserPerson,
+          child: const Text('Ich'),
+        ),
+        ...widget.people.map(
+          (p) => DropdownMenuItem(value: p, child: Text(p.name)),
+        ),
+      ];
+    }
   }
 
   @override
@@ -640,17 +672,7 @@ class _LineItemRowState extends State<_LineItemRow> {
                   ? _buildAddFriendButton()
                   : DropdownButtonFormField<Person>(
                       initialValue: _assignee,
-                      items: [
-                        // "Ich" als erste Option hinzufügen
-                        DropdownMenuItem(
-                          value: _currentUserPerson,
-                          child: const Text('Ich'),
-                        ),
-                        // Dann alle Freunde
-                        ...widget.people.map(
-                          (p) => DropdownMenuItem(value: p, child: Text(p.name)),
-                        ),
-                      ],
+                      items: _getAvailableAssigneeOptions(),
                       onChanged: (p) {
                         setState(() => _assignee = p);
                         _emit();
