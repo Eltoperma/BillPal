@@ -46,7 +46,7 @@ Die Architektur lehnt sich an Feature Driven Design an. Funktionen wie Belegerfa
 4.  App starten mit `flutter run`
 
 oder beigelegte APK herunterladen
-
+<https://github.com/Eltoperma/BillPal/releases/tag/v1.0>
 ---
 
 ## Beispieldaten
