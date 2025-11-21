@@ -669,6 +669,10 @@ class BillSharingService {
         AppLogger.bills.info('📊 Bill $billId ist teilweise beglichen');
         await _billRepo.updateBillStatus(billId, 'shared'); // Bleibt "shared"
         await _updateInMemoryBillStatus(billId.toString(), BillStatus.shared);
+        
+        // UI Refresh triggern auch für teilweise beglichene Bills
+        _refreshService.notifyBillsChanged();
+        _refreshService.notifyDebtsChanged();
       }
       
     } catch (e) {
