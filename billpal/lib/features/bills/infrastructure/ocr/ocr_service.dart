@@ -56,7 +56,33 @@ class OcrService {
       return a.yPosition.compareTo(b.yPosition);
     });
 
-    return linesWithPosition.map((l) => l.text).join('\n');
+    // Group lines with similar Y positions together
+    final List<String> groupedLines = [];
+    if (linesWithPosition.isEmpty) return '';
+
+    List<_LineWithPosition> currentGroup = [linesWithPosition.first];
+
+    for (int i = 1; i < linesWithPosition.length; i++) {
+      final current = linesWithPosition[i];
+      final previous = linesWithPosition[i - 1];
+      final yDiff = (current.yPosition - previous.yPosition).abs();
+
+      if (yDiff < 10) {
+        // Same line - add to current group
+        currentGroup.add(current);
+      } else {
+        // New line - join current group and start a new one
+        groupedLines.add(currentGroup.map((l) => l.text).join(' '));
+        currentGroup = [current];
+      }
+    }
+
+    // Add the last group
+    if (currentGroup.isNotEmpty) {
+      groupedLines.add(currentGroup.map((l) => l.text).join(' '));
+    }
+
+    return groupedLines.join('\n');
   }
 
   Future<RecognizedText?> extractTextDetailed(File imageFile) async {
