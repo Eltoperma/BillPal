@@ -244,10 +244,10 @@ class _BillHistoryPageState extends State<BillHistoryPage> with AutoRefreshMixin
               prefixIcon: const Icon(Icons.search),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-              ),
-              filled: true,
-              fillColor: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
             ),
+            filled: true,
+            fillColor: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+          ),
           ),
           
           const SizedBox(height: 12),
@@ -296,7 +296,7 @@ class _BillHistoryPageState extends State<BillHistoryPage> with AutoRefreshMixin
           Icon(
             Icons.receipt_long,
             size: 64,
-            color: Colors.grey.shade400,
+            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
           ),
           const SizedBox(height: 16),
           Text(
@@ -304,7 +304,7 @@ class _BillHistoryPageState extends State<BillHistoryPage> with AutoRefreshMixin
                 ? 'Keine Rechnungen gefunden'
                 : 'Noch keine Rechnungen vorhanden',
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              color: Colors.grey.shade600,
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
             ),
           ),
           const SizedBox(height: 8),
@@ -313,7 +313,7 @@ class _BillHistoryPageState extends State<BillHistoryPage> with AutoRefreshMixin
                 ? 'Versuche andere Suchbegriffe oder Filter'
                 : 'Erstelle deine erste Rechnung über das Dashboard',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Colors.grey.shade600,
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
             ),
           ),
         ],
@@ -349,7 +349,7 @@ class _BillHistoryPageState extends State<BillHistoryPage> with AutoRefreshMixin
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: statusColor.withOpacity(0.1),
+                color: statusColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(
@@ -376,7 +376,7 @@ class _BillHistoryPageState extends State<BillHistoryPage> with AutoRefreshMixin
                   Text(
                     'Bezahlt von ${bill.paidBy.name}',
                     style: TextStyle(
-                      color: Colors.grey.shade600,
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                       fontSize: 14,
                     ),
                   ),
@@ -386,13 +386,13 @@ class _BillHistoryPageState extends State<BillHistoryPage> with AutoRefreshMixin
                       Icon(
                         Icons.calendar_today,
                         size: 14,
-                        color: Colors.grey.shade600,
+                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                       ),
                       const SizedBox(width: 4),
                       Text(
                         DateFormat('dd.MM.yyyy').format(bill.date),
                         style: TextStyle(
-                          color: Colors.grey.shade600,
+                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                           fontSize: 12,
                         ),
                       ),
@@ -400,13 +400,13 @@ class _BillHistoryPageState extends State<BillHistoryPage> with AutoRefreshMixin
                       Icon(
                         Icons.receipt,
                         size: 14,
-                        color: Colors.grey.shade600,
+                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                       ),
                       const SizedBox(width: 4),
                       Text(
                         '${bill.items.length} Position${bill.items.length == 1 ? '' : 'en'}',
                         style: TextStyle(
-                          color: Colors.grey.shade600,
+                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                           fontSize: 12,
                         ),
                       ),
@@ -431,7 +431,7 @@ class _BillHistoryPageState extends State<BillHistoryPage> with AutoRefreshMixin
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: statusColor.withOpacity(0.1),
+                    color: statusColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(

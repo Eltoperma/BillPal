@@ -21,7 +21,7 @@ class PieChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (slices.isEmpty) return _buildEmptyState();
+    if (slices.isEmpty) return _buildEmptyState(context);
 
     return Column(
       children: [
@@ -42,11 +42,11 @@ class PieChart extends StatelessWidget {
     );
   }
 
-  Widget _buildEmptyState() => Container(
+  Widget _buildEmptyState(BuildContext context) => Container(
     width: size,
     height: size,
     decoration: BoxDecoration(
-      color: Colors.grey.shade100,
+      color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
       shape: BoxShape.circle,
     ),
     child: const Center(
@@ -68,13 +68,15 @@ class PieChart extends StatelessWidget {
     ),
   );
 
-  Widget _buildLegend() => Wrap(
-    spacing: 16,
-    runSpacing: 8,
-    children: slices.map(_buildLegendItem).toList(),
+  Widget _buildLegend() => Builder(
+    builder: (context) => Wrap(
+      spacing: 16,
+      runSpacing: 8,
+      children: slices.map((slice) => _buildLegendItem(context, slice)).toList(),
+    ),
   );
 
-  Widget _buildLegendItem(PieSlice slice) => Row(
+  Widget _buildLegendItem(BuildContext context, PieSlice slice) => Row(
     mainAxisSize: MainAxisSize.min,
     children: [
       Container(
@@ -90,7 +92,10 @@ class PieChart extends StatelessWidget {
       const SizedBox(width: 4),
       Text(
         '(${slice.amount.toStringAsFixed(0)}€)',
-        style: const TextStyle(fontSize: 12, color: Colors.black54),
+        style: TextStyle(
+          fontSize: 12,
+          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+        ),
       ),
     ],
   );
@@ -108,10 +113,9 @@ class _PieChartPainter extends CustomPainter {
     this.showLabels = false,
     this.strokeWidth = 40.0,
     TextStyle? labelStyle,
-  }) : labelStyle =
-           labelStyle ??
+  }) : labelStyle = labelStyle ?? 
            const TextStyle(
-             color: Colors.white,
+             color: Colors.white, // White text on colored pie segments is always readable
              fontSize: 12,
              fontWeight: FontWeight.bold,
            );

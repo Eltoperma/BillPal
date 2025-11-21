@@ -7,6 +7,7 @@ import 'package:billpal/features/settings/presentation/pages/category_management
 import 'package:billpal/shared/domain/entities.dart';
 import 'package:billpal/core/theme/theme_controller.dart';
 import 'package:billpal/l10n/locale_controller.dart';
+import 'package:billpal/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
@@ -31,6 +32,7 @@ class BillPalApp extends StatelessWidget {
           supportedLocales: const [Locale('de'), Locale('en')],
 
           localizationsDelegates: const [
+            AppLocalizations.delegate,
             GlobalMaterialLocalizations.delegate,
             GlobalWidgetsLocalizations.delegate,
             GlobalCupertinoLocalizations.delegate,

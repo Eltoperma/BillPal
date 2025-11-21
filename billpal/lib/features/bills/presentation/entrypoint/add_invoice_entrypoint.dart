@@ -1,6 +1,13 @@
-import 'package:billpal/features/bills/presentation/pages/add_invoice_form.dart';
+import 'dart:convert';
 import 'package:billpal/shared/domain/entities.dart';
+import 'package:billpal/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
+import '../../infrastructure/ocr/ocr_service.dart';
+import '../../infrastructure/ocr/receipt_data.dart';
+import '../../infrastructure/parsing/receipt_parser.dart';
+import '../../infrastructure/picking/image_picker_service.dart';
+import '../pages/add_invoice_form.dart';
+import 'package:flutter/foundation.dart' show kIsWeb, kDebugMode;
 
 /// Welche UI soll für die Quellenwahl genutzt werden?
 //enum AddInvoiceUI { sheet, menu, adaptive }
@@ -10,13 +17,13 @@ import 'package:flutter/material.dart';
 class AddInvoiceEntryButton extends StatelessWidget {
   final List<Person> people;
   //final AddInvoiceUI ui;
-  final String label;
+  final String? label;
 
   const AddInvoiceEntryButton({
     super.key,
     required this.people,
     //this.ui = AddInvoiceUI.adaptive,
-    this.label = 'Rechnung teilen',
+    this.label,
   });
 
   bool _useMenu(BuildContext context) {
@@ -25,15 +32,17 @@ class AddInvoiceEntryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
+    final buttonLabel = label ?? l10n.shareBill;
     return _useMenu(context)
-        ? _MenuAnchorButton(people: people, label: label)
+        ? _MenuAnchorButton(people: people, label: buttonLabel)
         : FloatingActionButton.extended(
             onPressed: () => _openChoiceSheet(context, people: people),
             icon: const Icon(Icons.add),
             backgroundColor: cs.primary,
             foregroundColor: cs.onPrimary,
-            label: Text(label),
+            label: Text(buttonLabel),
           );
   }
 }
@@ -43,6 +52,7 @@ Future<void> _openChoiceSheet(
   BuildContext context, {
   required List<Person> people,
 }) async {
+  final l10n = AppLocalizations.of(context)!;
   await showModalBottomSheet(
     context: context,
     useSafeArea: true,
@@ -56,7 +66,7 @@ Future<void> _openChoiceSheet(
         children: [
           ListTile(
             leading: const Icon(Icons.edit_outlined),
-            title: const Text('Manuell eingeben'),
+            title: Text(l10n.manualEntry),
             onTap: () async {
               Navigator.pop(ctx);
               await openAddInvoice(context, people: people);
@@ -65,25 +75,25 @@ Future<void> _openChoiceSheet(
           const Divider(height: 1),
           ListTile(
             leading: const Icon(Icons.photo_camera_outlined),
-            title: const Text('Foto aufnehmen'),
-            onTap: () {
+            title: Text(l10n.takePhoto),
+            onTap: () async {
               Navigator.pop(ctx);
-              _comingSoon(context, 'Foto aufnehmen');
+              await _scanReceipt(context, people: people, fromCamera: true);
             },
           ),
           const Divider(height: 1),
           ListTile(
             leading: const Icon(Icons.image_outlined),
-            title: const Text('Aus Galerie/Dateien importieren'),
-            onTap: () {
+            title: Text(l10n.importFromGallery),
+            onTap: () async {
               Navigator.pop(ctx);
-              _comingSoon(context, 'Import aus Galerie/Dateien');
+              await _scanReceipt(context, people: people, fromCamera: false);
             },
           ),
           const SizedBox(height: 8),
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Abbrechen'),
+            child: Text(l10n.cancel),
           ),
           const SizedBox(height: 8),
         ],
@@ -122,17 +132,25 @@ class _MenuAnchorButtonState extends State<_MenuAnchorButton> {
         const Divider(height: 1),
         MenuItemButton(
           leadingIcon: const Icon(Icons.photo_camera_outlined),
-          onPressed: () {
+          onPressed: () async {
             _menu.close();
-            _comingSoon(context, 'Foto aufnehmen');
+            await _scanReceipt(
+              context,
+              people: widget.people,
+              fromCamera: true,
+            );
           },
           child: const Text('Foto aufnehmen'),
         ),
         MenuItemButton(
           leadingIcon: const Icon(Icons.image_outlined),
-          onPressed: () {
+          onPressed: () async {
             _menu.close();
-            _comingSoon(context, 'Import aus Galerie/Dateien');
+            await _scanReceipt(
+              context,
+              people: widget.people,
+              fromCamera: false,
+            );
           },
           child: const Text('Aus Galerie/Dateien importieren'),
         ),
@@ -149,27 +167,143 @@ class _MenuAnchorButtonState extends State<_MenuAnchorButton> {
   }
 }
 
-/// Einfache „Bald verfügbar“-Info
-void _comingSoon(BuildContext context, String feature) {
-  showDialog(
-    context: context,
-    builder: (_) => AlertDialog(
-      title: const Text('Bald verfügbar'),
-      content: Text(
-        '$feature wird demnächst ergänzt.\n\n'
-        'Hier würdest du eine neue Rechnung automatisch hinzufügen:\n'
-        '📷 Foto machen oder auswählen\n'
-        '🤖 OCR zum automatischen Auslesen\n'
-        '👥 Freunde auswählen\n'
-        '💰 Beträge aufteilen\n'
-        '📅 Event zuordnen',
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('OK'),
+Future<void> _scanReceipt(
+  BuildContext context, {
+  required List<Person> people,
+  required bool fromCamera,
+}) async {
+  if (kIsWeb) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'OCR wird im Web nicht unterstützt.\n'
+            'Bitte auf Android oder iOS ausführen.',
+          ),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 4),
         ),
-      ],
-    ),
-  );
+      );
+    }
+    return;
+  }
+
+  final imagePickerService = ImagePickerService();
+  final ocrService = OcrService();
+  final receiptParser = ReceiptParser();
+
+  try {
+    final imageFile = fromCamera
+        ? await imagePickerService.pickFromCamera()
+        : await imagePickerService.pickFromGallery();
+
+    if (imageFile == null) return;
+
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Beleg wird verarbeitet...'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+
+    final rawText = await ocrService.extractText(imageFile);
+
+    if (rawText == null || rawText.isEmpty) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Kein Text erkannt. Bitte versuche es erneut.\n'
+              'Tipps: Gute Beleuchtung, flacher Beleg, scharf fokussiert.',
+            ),
+            backgroundColor: Colors.orange,
+            duration: Duration(seconds: 5),
+          ),
+        );
+      }
+      return;
+    }
+
+    // Debug: Print raw OCR text to console
+    if (kDebugMode) {
+      print('\n');
+      print('═══════════════════════════════════════════════════════════');
+      print('📄 OCR DETECTED TEXT (Raw Output):');
+      print('═══════════════════════════════════════════════════════════');
+      print(rawText);
+      print('═══════════════════════════════════════════════════════════');
+      print('\n');
+    }
+
+    final ReceiptData receiptData = receiptParser.parse(rawText);
+
+    // Debug: Print parsed receipt data as JSON to console
+    if (kDebugMode) {
+      print('\n');
+      print('═══════════════════════════════════════════════════════════');
+      print('📊 PARSED RECEIPT DATA (JSON):');
+      print('═══════════════════════════════════════════════════════════');
+      const encoder = JsonEncoder.withIndent('  ');
+      print(encoder.convert(receiptData.toJson()));
+      print('═══════════════════════════════════════════════════════════');
+      print('\n');
+    }
+
+    if (!receiptData.hasData) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text(
+              'Konnte keine Rechnungsdaten extrahieren.\n'
+              'Öffne das Formular zum manuellen Eingeben.',
+            ),
+            backgroundColor: Colors.orange,
+            duration: const Duration(seconds: 4),
+            action: SnackBarAction(
+              label: 'Details',
+              textColor: Colors.white,
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    title: const Text('OCR Rohtext'),
+                    content: SingleChildScrollView(child: Text(rawText)),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx),
+                        child: const Text('Schließen'),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        );
+      }
+      return;
+    }
+
+    if (context.mounted) {
+      await openAddInvoiceWithData(
+        context,
+        people: people,
+        receiptData: receiptData,
+      );
+    }
+  } catch (e) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Fehler beim Scannen: $e'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 5),
+        ),
+      );
+    }
+  } finally {
+    ocrService.dispose();
+  }
 }
