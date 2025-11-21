@@ -233,10 +233,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pleaseSelect => 'Please select';
 
   @override
-  String get removePosition => 'Remove item';
+  String get removePosition => 'Remove position';
 
   @override
   String get sum => 'Total';
+
+  @override
+  String get whoPaidLabel => 'Who paid?';
+
+  @override
+  String get whoPaidHint => 'Select the person who paid the bill';
+
+  @override
+  String get iPaid => 'I paid';
+
+  @override
+  String get someoneElsePaid => 'Someone else paid';
 
   @override
   String get atLeastOnePosition => 'Please provide at least one valid item.';
@@ -445,5 +457,74 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String errorLoadingBills(String error) {
     return 'Error loading bills: $error';
+  }
+
+  @override
+  String get categorySelect => 'Select category';
+
+  @override
+  String get categoryEdit => 'Edit category';
+
+  @override
+  String categoryAutoDetected(String category) {
+    return 'Auto-detected: $category';
+  }
+
+  @override
+  String categoryDetectedKeywords(String keywords) {
+    return 'Detected keywords: $keywords';
+  }
+
+  @override
+  String get categorySelectCorrect => 'Select the correct category:';
+
+  @override
+  String get categoryManage => 'Manage categories';
+
+  @override
+  String get categoryOther => 'Other';
+
+  @override
+  String get categoryOtherDesc => 'None of the above categories fit';
+
+  @override
+  String categoryChangedTo(String category) {
+    return '✅ Category changed to \"$category\"';
+  }
+
+  @override
+  String receiptFor(String title) {
+    return 'Receipt: \"$title\"';
+  }
+
+  @override
+  String get drawerCategories => 'Categories';
+
+  @override
+  String get categoryRestaurantFood => 'Restaurant & Food';
+
+  @override
+  String get categoryEntertainment => 'Entertainment';
+
+  @override
+  String get categoryTransport => 'Transport';
+
+  @override
+  String get categoryShopping => 'Shopping';
+
+  @override
+  String get categoryHousing => 'Housing & Fixed Costs';
+
+  @override
+  String get categoryOtherGeneral => 'Other';
+
+  @override
+  String billCountSingle(int count) {
+    return '$count bill';
+  }
+
+  @override
+  String billCountPlural(int count) {
+    return '$count bills';
   }
 }

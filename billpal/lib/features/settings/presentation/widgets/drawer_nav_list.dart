@@ -20,6 +20,11 @@ class DrawerNavList extends StatelessWidget {
           label: l10n.drawerMyFriends,
           route: '/friends',
         ),
+        _NavTile(
+          icon: Icons.category_outlined,
+          label: l10n.drawerCategories,
+          route: '/categories',
+        ),
         const Divider(height: 32),
       ],
     );

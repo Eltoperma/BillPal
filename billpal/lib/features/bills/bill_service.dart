@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import '../../core/database/repositories/repositories.dart';
 import '../../core/database/repositories/mock_repositories.dart';
 import '../../core/logging/app_logger.dart';
+import '../../core/services/data_refresh_service.dart';
 
 /// Service für Bill-Operationen mit Business-Logik
 /// Koordiniert mehrere Repositories und verwaltet Transaktionen
@@ -9,6 +10,7 @@ class BillService {
   // Web: Mock-Repositories, Desktop: Echte Repositories
   late final dynamic _billRepository;
   late final dynamic _positionRepository;
+  final DataRefreshService _refreshService = DataRefreshService();
 
   BillService() {
     if (kIsWeb) {
@@ -28,6 +30,7 @@ class BillService {
     required String title,
     required DateTime dateTime,
     required int userId, // Der User der die Rechnung erstellt
+    int? paidByUserId, // Wer hat bezahlt (optional, default = userId)
     required List<LineItemData> lineItems,
     String? picturePath,
   }) async {
@@ -50,10 +53,12 @@ class BillService {
     AppLogger.bills.success('✅ Validierung OK');
     
     // 2. Bill erstellen
+    final actualPaidByUserId = paidByUserId ?? userId; // Fallback auf Ersteller
     final billData = {
       'title': title.trim(),
       'date': dateTime.toIso8601String(),
       'user_id': userId,
+      'paid_by_user_id': actualPaidByUserId,
       'pic': picturePath,
     };
     
@@ -102,6 +107,11 @@ class BillService {
     }
     
     AppLogger.bills.success('🎉 Alle Daten erfolgreich gespeichert! Bill-ID: $billId');
+    
+    // UI Refresh triggern nach Bill-Erstellung
+    _refreshService.notifyBillsChanged();
+    _refreshService.notifyDebtsChanged();
+    
     return billId;
   }
 

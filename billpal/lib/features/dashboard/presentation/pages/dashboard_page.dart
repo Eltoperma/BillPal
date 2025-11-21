@@ -13,6 +13,7 @@ import 'package:billpal/core/logging/app_logger.dart';
 import 'package:billpal/shared/application/services.dart';
 import 'package:billpal/core/theme/theme_controller.dart';
 import 'package:billpal/core/app_mode/app_mode_service.dart';
+import 'package:billpal/core/mixins/auto_refresh_mixin.dart';
 import 'package:flutter/material.dart';
 
 class DashboardPage extends StatefulWidget {
@@ -28,9 +29,17 @@ class DashboardPage extends StatefulWidget {
   State<DashboardPage> createState() => _DashboardPageState();
 }
 
-class _DashboardPageState extends State<DashboardPage> {
+class _DashboardPageState extends State<DashboardPage> with AutoRefreshMixin {
   late final DashboardController _controller;
   DashboardState _state = const DashboardState(isLoading: true);
+
+  @override
+  List<String> get refreshEvents => ['bills_changed', 'debts_changed'];
+
+  @override
+  Future<void> onDataRefresh() async {
+    await _reload();
+  }
 
   @override
   void initState() {

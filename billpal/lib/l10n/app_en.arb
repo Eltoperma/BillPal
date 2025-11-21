@@ -132,8 +132,12 @@
   "mustBeGreaterZero": "Must be > 0",
   "person": "Person",
   "pleaseSelect": "Please select",
-  "removePosition": "Remove item",
+  "removePosition": "Remove position",
   "sum": "Total",
+  "whoPaidLabel": "Who paid?",
+  "whoPaidHint": "Select the person who paid the bill",
+  "iPaid": "I paid",
+  "someoneElsePaid": "Someone else paid",
   "atLeastOnePosition": "Please provide at least one valid item.",
   "billSavedSuccess": "Bill saved successfully! ID: {id}",
   "@billSavedSuccess": {
@@ -303,6 +307,78 @@
     "placeholders": {
       "error": {
         "type": "String"
+      }
+    }
+  },
+  
+  "categorySelect": "Select category",
+  "categoryEdit": "Edit category",
+  "categoryAutoDetected": "Auto-detected: {category}",
+  "@categoryAutoDetected": {
+    "placeholders": {
+      "category": {
+        "type": "String"
+      }
+    }
+  },
+  "categoryDetectedKeywords": "Detected keywords: {keywords}",
+  "@categoryDetectedKeywords": {
+    "placeholders": {
+      "keywords": {
+        "type": "String"
+      }
+    }
+  },
+  "categorySelectCorrect": "Select the correct category:",
+  "categoryManage": "Manage categories",
+  "categoryOther": "Other",
+  "categoryOtherDesc": "None of the above categories fit",
+  "categoryChangedTo": "✅ Category changed to \"{category}\"",
+  "@categoryChangedTo": {
+    "placeholders": {
+      "category": {
+        "type": "String"
+      }
+    }
+  },
+  "receiptFor": "Receipt: \"{title}\"",
+  "@receiptFor": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  
+  "drawerCategories": "Categories",
+  "@drawerCategories": {
+    "description": "Drawer menu item for categories"
+  },
+  
+  "categoryRestaurantFood": "Restaurant & Food",
+  "categoryEntertainment": "Entertainment",
+  "categoryTransport": "Transport", 
+  "categoryShopping": "Shopping",
+  "categoryHousing": "Housing & Fixed Costs",
+  "categoryOtherGeneral": "Other",
+  
+  "billCountSingle": "{count} bill",
+  "@billCountSingle": {
+    "description": "Single bill count for pie chart",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "1"
+      }
+    }
+  },
+  "billCountPlural": "{count} bills",
+  "@billCountPlural": {
+    "description": "Plural bill count for pie chart",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "5"
       }
     }
   }

@@ -6,6 +6,13 @@ import 'package:billpal/shared/application/services.dart';
 import '../../bill_service.dart';
 import '../../../../core/logging/app_logger.dart';
 
+// Konstante "Ich"-Person für konsistente Referenz
+final Person _currentUserPerson = Person(
+  id: 'current_user',
+  name: 'Ich',
+  createdAt: DateTime.now(),
+);
+
 class LineItem {
   String description;
   double? amount;
@@ -135,6 +142,7 @@ class _AddInvoiceFormState extends State<AddInvoiceForm> {
   final _titleCtrl = TextEditingController();
   DateTime _dateTime = DateTime.now();
   final _items = <LineItem>[LineItem()];
+  Person? _paidByPerson; // Wer hat bezahlt
 
   final _currencyFmt = NumberFormat.currency(locale: 'de_DE', symbol: '€');
 
@@ -161,7 +169,7 @@ class _AddInvoiceFormState extends State<AddInvoiceForm> {
           LineItem(
             description: receiptItem.description,
             amount: receiptItem.totalPrice,
-            assignee: null, // User needs to assign manually
+            assignee: _getDefaultAssignee(), // Automatische Zuordnung basierend auf Zahler
           ),
         );
       }
@@ -235,7 +243,40 @@ class _AddInvoiceFormState extends State<AddInvoiceForm> {
     });
   }
 
-  void _addItem() => setState(() => _items.add(LineItem()));
+  void _addItem() => setState(() => _items.add(LineItem(assignee: _getDefaultAssignee())));
+
+  /// Bestimmt die Standard-Zuordnung für neue Positionen basierend auf dem Zahler
+  Person? _getDefaultAssignee() {
+    if (_paidByPerson?.id == 'current_user') {
+      // Ich habe bezahlt → andere sind Schuldner → keine Auto-Zuordnung
+      return null;
+    } else if (_paidByPerson != null) {
+      // Jemand anderes hat bezahlt → ich bin der Schuldner
+      return _currentUserPerson;
+    }
+    return null; // Kein Zahler ausgewählt
+  }
+
+  /// Aktualisiert alle Positionen basierend auf dem neuen Zahler
+  void _updateItemsForNewPayer(Person? newPayer) {
+    setState(() {
+      for (int i = 0; i < _items.length; i++) {
+        // Nur aktualisieren wenn noch keine manuelle Zuordnung erfolgt ist
+        final item = _items[i];
+        final shouldAutoAssign = item.assignee == null ||
+            item.assignee?.id == 'current_user' ||
+            (item.assignee?.id != 'current_user' && newPayer?.id == 'current_user');
+        
+        if (shouldAutoAssign) {
+          _items[i] = LineItem(
+            description: item.description,
+            amount: item.amount,
+            assignee: _getDefaultAssignee(),
+          );
+        }
+      }
+    });
+  }
   void _removeItem(int index) => setState(() => _items.removeAt(index));
 
   double get _total => _items.fold(0.0, (s, i) => s + (i.amount ?? 0.0));
@@ -292,16 +333,22 @@ class _AddInvoiceFormState extends State<AddInvoiceForm> {
         // Person ID zu int konvertieren
         int? assigneeUserId;
         try {
-          assigneeUserId = int.parse(item.assignee!.id);
-          AppLogger.bills.debug(
-            '✅ Person ID "${item.assignee!.id}" → $assigneeUserId',
-          );
+          // Spezielle Behandlung für "current_user"
+          if (item.assignee!.id == 'current_user') {
+            assigneeUserId = 1; // App-User ist immer ID 1
+            AppLogger.bills.debug('✅ Current User → assigneeUserId = 1');
+          } else {
+            assigneeUserId = int.parse(item.assignee!.id);
+            AppLogger.bills.debug(
+              '✅ Person ID "${item.assignee!.id}" → $assigneeUserId',
+            );
+          }
         } catch (e) {
           AppLogger.bills.error(
             '❌ Fehler bei Person ID Konvertierung: "${item.assignee!.id}" → $e',
           );
-          // Fallback: Verwende Hash-Code oder feste ID
-          assigneeUserId = item.assignee!.id.hashCode.abs() % 10000;
+          // Fallback: Verwende sichere Konvertierung
+          assigneeUserId = _getUserIdSafely(item.assignee!.id);
           AppLogger.bills.debug('🔧 Fallback Person ID: $assigneeUserId');
         }
 
@@ -321,10 +368,18 @@ class _AddInvoiceFormState extends State<AddInvoiceForm> {
       // In DB speichern
       AppLogger.bills.info('🟡 Rufe BillService.saveInvoiceData auf...');
       final currentUser = await UserService().getCurrentUser();
+      
+      // Bestimme wer bezahlt hat
+      final paidByPerson = _paidByPerson ?? currentUser; // Fallback auf aktuellen User
+      final paidByUserId = _getUserIdSafely(paidByPerson.id);
+      
+      AppLogger.bills.debug('🟡 Bezahlt von: ${paidByPerson.name} (ID: $paidByUserId)');
+      
       final billId = await billService.saveInvoiceData(
         title: _titleCtrl.text.trim(),
         dateTime: _dateTime,
-        userId: _getUserIdSafely(currentUser.id),
+        userId: _getUserIdSafely(currentUser.id), // Ersteller der Rechnung
+        paidByUserId: paidByUserId, // Wer hat bezahlt
         lineItems: lineItemsData,
       );
 
@@ -415,6 +470,15 @@ class _AddInvoiceFormState extends State<AddInvoiceForm> {
               ),
             ),
             const SizedBox(height: 16),
+            _WhoPaidSelector(
+              selectedPerson: _paidByPerson,
+              people: widget.people,
+              onChanged: (person) {
+                setState(() => _paidByPerson = person);
+                _updateItemsForNewPayer(person);
+              },
+            ),
+            const SizedBox(height: 16),
             Row(
               children: [
                 const Text(
@@ -435,6 +499,7 @@ class _AddInvoiceFormState extends State<AddInvoiceForm> {
                 key: ValueKey('line-$i'),
                 item: _items[i],
                 people: widget.people,
+                paidByPerson: _paidByPerson,
                 onChanged: (updated) => setState(() => _items[i] = updated),
                 onRemove: _items.length > 1 ? () => _removeItem(i) : null,
               ),
@@ -477,12 +542,14 @@ class _AddInvoiceFormState extends State<AddInvoiceForm> {
 class _LineItemRow extends StatefulWidget {
   final LineItem item;
   final List<Person> people;
+  final Person? paidByPerson;
   final void Function(LineItem) onChanged;
   final VoidCallback? onRemove;
   const _LineItemRow({
     super.key,
     required this.item,
     required this.people,
+    required this.paidByPerson,
     required this.onChanged,
     this.onRemove,
   });
@@ -495,6 +562,8 @@ class _LineItemRowState extends State<_LineItemRow> {
   late final TextEditingController _descCtrl;
   late final TextEditingController _amountCtrl;
   Person? _assignee;
+  
+
 
   @override
   void initState() {
@@ -522,6 +591,35 @@ class _LineItemRowState extends State<_LineItemRow> {
         assignee: _assignee,
       ),
     );
+  }
+
+  /// Bestimmt verfügbare Zuordnungsoptionen basierend auf dem Zahler
+  List<DropdownMenuItem<Person>> _getAvailableAssigneeOptions() {
+    if (widget.paidByPerson?.id == 'current_user') {
+      // Ich habe bezahlt → andere sind Schuldner → alle Freunde verfügbar
+      return widget.people.map(
+        (p) => DropdownMenuItem(value: p, child: Text(p.name)),
+      ).toList();
+    } else if (widget.paidByPerson != null) {
+      // Jemand anderes hat bezahlt → nur "Ich" ist verfügbar als Schuldner
+      return [
+        DropdownMenuItem(
+          value: _currentUserPerson,
+          child: const Text('Ich'),
+        ),
+      ];
+    } else {
+      // Kein Zahler ausgewählt → alle Optionen verfügbar
+      return [
+        DropdownMenuItem(
+          value: _currentUserPerson,
+          child: const Text('Ich'),
+        ),
+        ...widget.people.map(
+          (p) => DropdownMenuItem(value: p, child: Text(p.name)),
+        ),
+      ];
+    }
   }
 
   @override
@@ -574,12 +672,7 @@ class _LineItemRowState extends State<_LineItemRow> {
                   ? _buildAddFriendButton()
                   : DropdownButtonFormField<Person>(
                       initialValue: _assignee,
-                      items: widget.people
-                          .map(
-                            (p) =>
-                                DropdownMenuItem(value: p, child: Text(p.name)),
-                          )
-                          .toList(),
+                      items: _getAvailableAssigneeOptions(),
                       onChanged: (p) {
                         setState(() => _assignee = p);
                         _emit();
@@ -675,5 +768,89 @@ class _LineItemRowState extends State<_LineItemRow> {
         ),
       );
     }
+  }
+}
+
+/// Widget zur Auswahl, wer die Rechnung bezahlt hat
+class _WhoPaidSelector extends StatelessWidget {
+  final Person? selectedPerson;
+  final List<Person> people;
+  final ValueChanged<Person?> onChanged;
+
+  const _WhoPaidSelector({
+    required this.selectedPerson,
+    required this.people,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // Erstelle Liste mit "Ich" als erste Option
+    final options = <Person>[
+      _currentUserPerson,
+      ...people,
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Wer hat bezahlt?', // TODO: Lokalisierung hinzufügen
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          decoration: BoxDecoration(
+            border: Border.all(color: Theme.of(context).dividerColor),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<Person>(
+              value: selectedPerson,
+              hint: Text('Person auswählen'), // TODO: Lokalisierung hinzufügen
+              isExpanded: true,
+              items: options.map((person) {
+                return DropdownMenuItem<Person>(
+                  value: person,
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 16,
+                        backgroundColor: person.id == 'current_user' 
+                            ? Colors.blue.shade100
+                            : Colors.grey.shade200,
+                        child: Text(
+                          person.name[0].toUpperCase(),
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: person.id == 'current_user'
+                                ? Colors.blue.shade700
+                                : Colors.grey.shade700,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          person.name,
+                          style: TextStyle(
+                            fontWeight: person.id == 'current_user' 
+                                ? FontWeight.w600
+                                : FontWeight.normal,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+              onChanged: onChanged,
+            ),
+          ),
+        ),
+      ],
+    );
   }
 }

@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:billpal/shared/domain/entities.dart';
 import 'package:billpal/shared/application/services.dart';
+import 'package:billpal/features/settings/application/services/configurable_category_service.dart';
+import 'package:billpal/features/settings/application/services/multi_language_category_service.dart';
+import 'package:billpal/shared/presentation/dialogs/category_selection_dialog.dart';
 import '../../../../core/logging/app_logger.dart';
 import '../../../../core/utils/currency.dart';
+import '../../../../core/mixins/auto_refresh_mixin.dart';
 import 'package:intl/intl.dart';
 
 /// Detailansicht einer einzelnen Rechnung mit Posten und Settlement-Funktionen
@@ -18,11 +22,34 @@ class BillDetailPage extends StatefulWidget {
   State<BillDetailPage> createState() => _BillDetailPageState();
 }
 
-class _BillDetailPageState extends State<BillDetailPage> {
+class _BillDetailPageState extends State<BillDetailPage> with AutoRefreshMixin {
   final BillSharingService _billService = BillSharingService();
   late SharedBill _bill;
   List<BillPosition> _positions = [];
   bool _isLoading = true;
+  
+  // Temporary localization helper
+  String _getLocalizedString(String key, BuildContext context, {String? param}) {
+    final currentLocale = CategoryLocaleService.getCurrentLocale(context);
+    final isGerman = currentLocale == 'de';
+    
+    switch (key) {
+      case 'categoryEdit':
+        return isGerman ? 'Kategorie bearbeiten' : 'Edit category';
+      case 'categoryChangedTo':
+        return isGerman ? '✅ Kategorie zu "$param" geändert' : '✅ Category changed to "$param"';
+      default:
+        return key;
+    }
+  }
+
+  @override
+  List<String> get refreshEvents => ['bills_changed', 'debts_changed'];
+
+  @override
+  Future<void> onDataRefresh() async {
+    await _loadBillDetails();
+  }
 
   @override
   void initState() {
@@ -73,12 +100,45 @@ class _BillDetailPageState extends State<BillDetailPage> {
     }
   }
 
+  Future<void> _showCategoryDialog() async {
+    final currentLocale = CategoryLocaleService.getCurrentLocale(context);
+    final currentCategory = ConfigurableCategoryService.categorizeTitle(_bill.title, locale: currentLocale);
+    
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => CategorySelectionDialog(
+        currentCategory: currentCategory,
+        billTitle: _bill.title,
+      ),
+    );
+
+    if (result != null && result != currentCategory) {
+      // User hat Kategorie korrigiert
+      final userService = MultiLanguageUserCategoryService();
+      await userService.addCorrection(_bill.title, currentCategory, result, currentLocale);
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(_getLocalizedString('categoryChangedTo', context, param: result)),
+          backgroundColor: Colors.green,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(_bill.title),
         elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.category_outlined),
+            tooltip: _getLocalizedString('categoryEdit', context),
+            onPressed: _showCategoryDialog,
+          ),
+        ],
       ),
       body: _isLoading 
         ? const Center(child: CircularProgressIndicator())

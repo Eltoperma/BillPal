@@ -61,6 +61,17 @@ class BillRepository implements BaseRepository<Map<String, dynamic>> {
     );
   }
 
+  /// Aktualisiert den Status einer Bill
+  Future<int> updateBillStatus(int billId, String status) async {
+    final Database db = await _databaseHelper.database;
+    return await db.update(
+      'bills',
+      {'status': status},
+      where: 'id = ?',
+      whereArgs: [billId],
+    );
+  }
+
   // Bill-spezifische Methoden basierend auf ERD
   Future<List<Map<String, dynamic>>> getBillsByUserId(int userId) async {
     final Database db = await _databaseHelper.database;
