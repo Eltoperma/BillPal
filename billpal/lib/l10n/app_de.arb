@@ -353,5 +353,33 @@
   "drawerCategories": "Kategorien",
   "@drawerCategories": {
     "description": "Drawer menu item for categories"
+  },
+  
+  "categoryRestaurantFood": "Restaurant & Essen",
+  "categoryEntertainment": "Unterhaltung",
+  "categoryTransport": "Transport", 
+  "categoryShopping": "Einkaufen",
+  "categoryHousing": "Wohnen & Fixkosten",
+  "categoryOtherGeneral": "Sonstiges",
+  
+  "billCountSingle": "{count} Rechnung",
+  "@billCountSingle": {
+    "description": "Single bill count for pie chart",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "1"
+      }
+    }
+  },
+  "billCountPlural": "{count} Rechnungen",
+  "@billCountPlural": {
+    "description": "Plural bill count for pie chart",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "5"
+      }
+    }
   }
 }

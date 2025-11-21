@@ -132,22 +132,26 @@ class BillSharingAnalyticsService {
     }
     
     final categoryColors = {
-      'Restaurant & Essen': Colors.orange.shade600,     // 🍕 Orange
-      'Unterhaltung': Colors.purple.shade600,          // 🎬 Lila  
-      'Transport': Colors.blue.shade600,               // 🚗 Blau
-      'Einkaufen': Colors.green.shade600,              // 🛒 Grün
-      'Wohnen & Fixkosten': Colors.red.shade600,       // 🏠 Rot
-      'Sonstiges': Colors.grey.shade600,               // ❓ Grau
+      'restaurant_food': Colors.orange.shade600,     // 🍕 Orange
+      'entertainment': Colors.purple.shade600,       // 🎬 Lila  
+      'transport': Colors.blue.shade600,             // 🚗 Blau
+      'shopping': Colors.green.shade600,             // 🛒 Grün
+      'housing': Colors.red.shade600,                // 🏠 Rot
+      'other': Colors.grey.shade600,                 // ❓ Grau
     };
     
     return categoryTotals.entries
-        .map((entry) => ExpenseCategory(
-              category: entry.key,
-              amount: entry.value,
-              color: categoryColors[entry.key] ?? Colors.grey,
-              billCount: categoryBillCounts[entry.key] ?? 0,
-              friendsInvolved: categoryFriends[entry.key]?.toList() ?? [],
-            ))
+        .map((entry) {
+              // Mappe deutsche Kategorienamen auf IDs
+              final categoryId = _mapCategoryNameToId(entry.key);
+              return ExpenseCategory(
+                category: categoryId,
+                amount: entry.value,
+                color: categoryColors[categoryId] ?? Colors.grey,
+                billCount: categoryBillCounts[entry.key] ?? 0,
+                friendsInvolved: categoryFriends[entry.key]?.toList() ?? [],
+              );
+            })
         .where((cat) => cat.amount > 0)
         .toList()
       ..sort((a, b) => b.amount.compareTo(a.amount));
@@ -157,6 +161,25 @@ class BillSharingAnalyticsService {
     // Verwende den MultiLanguageUserCategoryService mit User-Keywords
     await _categoryService.loadUserKeywords('de'); // Keywords laden
     return _categoryService.categorizeWithUserKeywords(title, locale: 'de');
+  }
+  
+  /// Mappe deutsche Kategorienamen auf internationale IDs
+  String _mapCategoryNameToId(String germanName) {
+    switch (germanName) {
+      case 'Restaurant & Essen':
+        return 'restaurant_food';
+      case 'Unterhaltung':
+        return 'entertainment';
+      case 'Transport':
+        return 'transport';
+      case 'Einkaufen':
+        return 'shopping';
+      case 'Wohnen & Fixkosten':
+        return 'housing';
+      case 'Sonstiges':
+      default:
+        return 'other';
+    }
   }
 
   /// Erstellt Pie-Chart-Daten

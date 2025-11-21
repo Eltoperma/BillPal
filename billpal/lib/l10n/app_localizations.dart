@@ -979,6 +979,54 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Kategorien'**
   String get drawerCategories;
+
+  /// No description provided for @categoryRestaurantFood.
+  ///
+  /// In de, this message translates to:
+  /// **'Restaurant & Essen'**
+  String get categoryRestaurantFood;
+
+  /// No description provided for @categoryEntertainment.
+  ///
+  /// In de, this message translates to:
+  /// **'Unterhaltung'**
+  String get categoryEntertainment;
+
+  /// No description provided for @categoryTransport.
+  ///
+  /// In de, this message translates to:
+  /// **'Transport'**
+  String get categoryTransport;
+
+  /// No description provided for @categoryShopping.
+  ///
+  /// In de, this message translates to:
+  /// **'Einkaufen'**
+  String get categoryShopping;
+
+  /// No description provided for @categoryHousing.
+  ///
+  /// In de, this message translates to:
+  /// **'Wohnen & Fixkosten'**
+  String get categoryHousing;
+
+  /// No description provided for @categoryOtherGeneral.
+  ///
+  /// In de, this message translates to:
+  /// **'Sonstiges'**
+  String get categoryOtherGeneral;
+
+  /// Single bill count for pie chart
+  ///
+  /// In de, this message translates to:
+  /// **'{count} Rechnung'**
+  String billCountSingle(int count);
+
+  /// Plural bill count for pie chart
+  ///
+  /// In de, this message translates to:
+  /// **'{count} Rechnungen'**
+  String billCountPlural(int count);
 }
 
 class _AppLocalizationsDelegate

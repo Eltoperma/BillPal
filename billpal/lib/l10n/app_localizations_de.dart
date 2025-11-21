@@ -500,4 +500,32 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get drawerCategories => 'Kategorien';
+
+  @override
+  String get categoryRestaurantFood => 'Restaurant & Essen';
+
+  @override
+  String get categoryEntertainment => 'Unterhaltung';
+
+  @override
+  String get categoryTransport => 'Transport';
+
+  @override
+  String get categoryShopping => 'Einkaufen';
+
+  @override
+  String get categoryHousing => 'Wohnen & Fixkosten';
+
+  @override
+  String get categoryOtherGeneral => 'Sonstiges';
+
+  @override
+  String billCountSingle(int count) {
+    return '$count Rechnung';
+  }
+
+  @override
+  String billCountPlural(int count) {
+    return '$count Rechnungen';
+  }
 }
