@@ -27,6 +27,21 @@ class _BillDetailPageState extends State<BillDetailPage> with AutoRefreshMixin {
   late SharedBill _bill;
   List<BillPosition> _positions = [];
   bool _isLoading = true;
+  
+  // Temporary localization helper
+  String _getLocalizedString(String key, BuildContext context, {String? param}) {
+    final currentLocale = CategoryLocaleService.getCurrentLocale(context);
+    final isGerman = currentLocale == 'de';
+    
+    switch (key) {
+      case 'categoryEdit':
+        return isGerman ? 'Kategorie bearbeiten' : 'Edit category';
+      case 'categoryChangedTo':
+        return isGerman ? '✅ Kategorie zu "$param" geändert' : '✅ Category changed to "$param"';
+      default:
+        return key;
+    }
+  }
 
   @override
   List<String> get refreshEvents => ['bills_changed', 'debts_changed'];
@@ -104,7 +119,7 @@ class _BillDetailPageState extends State<BillDetailPage> with AutoRefreshMixin {
       
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('✅ Kategorie zu "$result" geändert'),
+          content: Text(_getLocalizedString('categoryChangedTo', context, param: result)),
           backgroundColor: Colors.green,
         ),
       );
@@ -120,7 +135,7 @@ class _BillDetailPageState extends State<BillDetailPage> with AutoRefreshMixin {
         actions: [
           IconButton(
             icon: const Icon(Icons.category_outlined),
-            tooltip: 'Kategorie bearbeiten',
+            tooltip: _getLocalizedString('categoryEdit', context),
             onPressed: _showCategoryDialog,
           ),
         ],

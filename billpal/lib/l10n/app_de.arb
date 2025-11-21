@@ -305,5 +305,49 @@
         "type": "String"
       }
     }
+  },
+  
+  "categorySelect": "Kategorie auswählen",
+  "categoryEdit": "Kategorie bearbeiten",
+  "categoryAutoDetected": "Automatisch erkannt: {category}",
+  "@categoryAutoDetected": {
+    "placeholders": {
+      "category": {
+        "type": "String"
+      }
+    }
+  },
+  "categoryDetectedKeywords": "Erkannte Keywords: {keywords}",
+  "@categoryDetectedKeywords": {
+    "placeholders": {
+      "keywords": {
+        "type": "String"
+      }
+    }
+  },
+  "categorySelectCorrect": "Wähle die richtige Kategorie:",
+  "categoryManage": "Kategorien verwalten",
+  "categoryOther": "Sonstiges",
+  "categoryOtherDesc": "Keine der obigen Kategorien passt",
+  "categoryChangedTo": "✅ Kategorie zu \"{category}\" geändert",
+  "@categoryChangedTo": {
+    "placeholders": {
+      "category": {
+        "type": "String"
+      }
+    }
+  },
+  "receiptFor": "Rechnung: \"{title}\"",
+  "@receiptFor": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  
+  "drawerCategories": "Kategorien",
+  "@drawerCategories": {
+    "description": "Drawer menu item for categories"
   }
 }

@@ -14,15 +14,24 @@ class CategoryLocaleService {
         final locale = Localizations.localeOf(context);
         final languageCode = locale.languageCode.toLowerCase();
         
+        // Debug-Ausgabe
+        print('🌍 CategoryLocale Debug: Detected locale: $locale, languageCode: $languageCode');
+        
         if (['de', 'en'].contains(languageCode)) {
+          print('🌍 CategoryLocale: Using $languageCode');
           return languageCode;
+        } else {
+          print('🌍 CategoryLocale: Unsupported language $languageCode, falling back to en');
         }
       } catch (e) {
-        // Localization nicht verfügbar
+        print('🌍 CategoryLocale Error: $e, falling back to en');
       }
+    } else {
+      print('🌍 CategoryLocale: No context provided, falling back to en');
     }
     
-    return 'de';
+    // Fallback auf Englisch statt Deutsch
+    return 'en';
   }
 
   /// Holt den lokalisierten Namen einer Kategorie
@@ -254,8 +263,8 @@ class MultiLanguageUserCategoryService extends ConfigurableCategoryService {
       }
     }
     
-    // Dann Standard-Kategorisierung
-    final standardResult = ConfigurableCategoryService.categorizeTitle(title);
+    // Dann Standard-Kategorisierung mit korrekte Locale
+    final standardResult = ConfigurableCategoryService.categorizeTitle(title, locale: locale);
     
     return standardResult;
   }

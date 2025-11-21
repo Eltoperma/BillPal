@@ -23,28 +23,36 @@ class DatabaseHelper {
 
   /// Initialisiert die SQLite-Datenbank
   Future<Database> _initDatabase() async {
-    final String path;
+    String path;
     
     if (kIsWeb) {
       // Web: In-Memory Database verwenden
       path = ':memory:';
       AppLogger.sql.info('🗃️ SQLite DB (WEB/Memory): $path');
-    } else if (kDebugMode) {
-      // Desktop Debug: Projektverzeichnis verwenden
-      path = join(Directory.current.path, 'dev_data', 'billpal.db');
-      
-      // Directory erstellen falls nicht vorhanden
-      final devDataDir = Directory(join(Directory.current.path, 'dev_data'));
-      if (!await devDataDir.exists()) {
-        await devDataDir.create(recursive: true);
+    } else if (kDebugMode && (Platform.isLinux || Platform.isWindows || Platform.isMacOS)) {
+      // Desktop Debug: Projektverzeichnis verwenden (nur auf Desktop-Plattformen)
+      try {
+        path = join(Directory.current.path, 'dev_data', 'billpal.db');
+        
+        // Directory erstellen falls nicht vorhanden
+        final devDataDir = Directory(join(Directory.current.path, 'dev_data'));
+        if (!await devDataDir.exists()) {
+          await devDataDir.create(recursive: true);
+        }
+        
+        AppLogger.sql.info('🗃️ SQLite DB (DESKTOP-DEV): $path');
+      } catch (e) {
+        // Fallback zu App Documents wenn Desktop-Pfad nicht funktioniert
+        final Directory documentsDirectory = await getApplicationDocumentsDirectory();
+        path = join(documentsDirectory.path, 'billpal_dev.db');
+        AppLogger.sql.info('🗃️ SQLite DB (FALLBACK-DEV): $path');
       }
-      
-      AppLogger.sql.info('🗃️ SQLite DB (DEV): $path');
     } else {
-      // Desktop/Mobile Production: App-Documents verwenden
+      // Mobile/Desktop Production: App-Documents verwenden
       final Directory documentsDirectory = await getApplicationDocumentsDirectory();
-      path = join(documentsDirectory.path, 'billpal.db');
-      AppLogger.sql.info('🗃️ SQLite DB (PROD): $path');
+      final dbName = kDebugMode ? 'billpal_debug.db' : 'billpal.db';
+      path = join(documentsDirectory.path, dbName);
+      AppLogger.sql.info('🗃️ SQLite DB (${kDebugMode ? 'MOBILE-DEV' : 'PROD'}): $path');
     }
     
     return await openDatabase(

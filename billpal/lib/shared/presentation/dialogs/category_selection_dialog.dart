@@ -21,6 +21,33 @@ class _CategorySelectionDialogState extends State<CategorySelectionDialog> {
   late String _selectedCategory;
   List<CategoryDefinition> _categories = [];
   late String _currentLocale;
+  
+  // Temporary localization helper until flutter_gen is available
+  String _getLocalizedString(String key) {
+    final isGerman = _currentLocale == 'de';
+    switch (key) {
+      case 'categorySelect':
+        return isGerman ? 'Kategorie auswählen' : 'Select category';
+      case 'categoryEdit':
+        return isGerman ? 'Kategorie bearbeiten' : 'Edit category';
+      case 'categoryAutoDetected':
+        return isGerman ? 'Automatisch erkannt:' : 'Auto-detected:';
+      case 'categoryDetectedKeywords':
+        return isGerman ? 'Erkannte Keywords:' : 'Detected keywords:';
+      case 'categorySelectCorrect':
+        return isGerman ? 'Wähle die richtige Kategorie:' : 'Select the correct category:';
+      case 'categoryManage':
+        return isGerman ? 'Kategorien verwalten' : 'Manage categories';
+      case 'categoryOtherDesc':
+        return isGerman ? 'Keine der obigen Kategorien passt' : 'None of the above categories fit';
+      case 'cancel':
+        return isGerman ? 'Abbrechen' : 'Cancel';
+      case 'confirm':
+        return isGerman ? 'Bestätigen' : 'Confirm';
+      default:
+        return key;
+    }
+  }
 
   @override
   void initState() {
@@ -40,7 +67,7 @@ class _CategorySelectionDialogState extends State<CategorySelectionDialog> {
     final analysis = ConfigurableCategoryService.analyzeTitle(widget.billTitle);
     
     return AlertDialog(
-      title: const Text('Kategorie auswählen'),
+      title: Text(_getLocalizedString('categorySelect')),
       content: SizedBox(
         width: double.maxFinite,
         child: Column(
@@ -58,18 +85,18 @@ class _CategorySelectionDialogState extends State<CategorySelectionDialog> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Rechnung: "${widget.billTitle}"',
+                    '${_currentLocale == 'de' ? 'Rechnung' : 'Receipt'}: "${widget.billTitle}"',
                     style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Automatisch erkannt: ${widget.currentCategory}',
+                    '${_getLocalizedString('categoryAutoDetected')} ${widget.currentCategory}',
                     style: TextStyle(color: Colors.grey.shade600),
                   ),
                   if (analysis.bestMatch?.matchedKeywords.isNotEmpty == true) ...[
                     const SizedBox(height: 4),
                     Text(
-                      'Erkannte Keywords: ${analysis.bestMatch!.matchedKeywords.join(', ')}',
+                      '${_getLocalizedString('categoryDetectedKeywords')} ${analysis.bestMatch!.matchedKeywords.join(', ')}',
                       style: TextStyle(
                         fontSize: 12,
                         color: Colors.grey.shade600,
@@ -82,8 +109,8 @@ class _CategorySelectionDialogState extends State<CategorySelectionDialog> {
             ),
             
             const SizedBox(height: 16),
-            const Text(
-              'Wähle die richtige Kategorie:',
+            Text(
+              _getLocalizedString('categorySelectCorrect'),
               style: TextStyle(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 8),
@@ -99,7 +126,7 @@ class _CategorySelectionDialogState extends State<CategorySelectionDialog> {
                     final otherCategoryName = CategoryLocaleService.getOtherCategoryName(_currentLocale);
                     return RadioListTile<String>(
                       title: Text(otherCategoryName),
-                      subtitle: const Text('Keine der obigen Kategorien passt'),
+                      subtitle: Text(_getLocalizedString('categoryOtherDesc')),
                       value: otherCategoryName,
                       groupValue: _selectedCategory,
                       onChanged: (value) {
@@ -137,18 +164,18 @@ class _CategorySelectionDialogState extends State<CategorySelectionDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Abbrechen'),
+          child: Text(_getLocalizedString('cancel')),
         ),
         TextButton(
           onPressed: () {
             Navigator.of(context).pop(); // Schließe Dialog
             Navigator.of(context).pushNamed('/categories'); // Navigiere zu Category Management
           },
-          child: const Text('Kategorien verwalten'),
+          child: Text(_getLocalizedString('categoryManage')),
         ),
         ElevatedButton(
           onPressed: () => Navigator.of(context).pop(_selectedCategory),
-          child: const Text('Bestätigen'),
+          child: Text(_getLocalizedString('confirm')),
         ),
       ],
     );

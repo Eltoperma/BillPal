@@ -305,5 +305,49 @@
         "type": "String"
       }
     }
+  },
+  
+  "categorySelect": "Select category",
+  "categoryEdit": "Edit category",
+  "categoryAutoDetected": "Auto-detected: {category}",
+  "@categoryAutoDetected": {
+    "placeholders": {
+      "category": {
+        "type": "String"
+      }
+    }
+  },
+  "categoryDetectedKeywords": "Detected keywords: {keywords}",
+  "@categoryDetectedKeywords": {
+    "placeholders": {
+      "keywords": {
+        "type": "String"
+      }
+    }
+  },
+  "categorySelectCorrect": "Select the correct category:",
+  "categoryManage": "Manage categories",
+  "categoryOther": "Other",
+  "categoryOtherDesc": "None of the above categories fit",
+  "categoryChangedTo": "✅ Category changed to \"{category}\"",
+  "@categoryChangedTo": {
+    "placeholders": {
+      "category": {
+        "type": "String"
+      }
+    }
+  },
+  "receiptFor": "Receipt: \"{title}\"",
+  "@receiptFor": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  
+  "drawerCategories": "Categories",
+  "@drawerCategories": {
+    "description": "Drawer menu item for categories"
   }
 }

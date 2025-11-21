@@ -447,4 +447,45 @@ class AppLocalizationsDe extends AppLocalizations {
   String errorLoadingBills(String error) {
     return 'Fehler beim Laden der Rechnungen: $error';
   }
+
+  @override
+  String get categorySelect => 'Kategorie auswählen';
+
+  @override
+  String get categoryEdit => 'Kategorie bearbeiten';
+
+  @override
+  String categoryAutoDetected(String category) {
+    return 'Automatisch erkannt: $category';
+  }
+
+  @override
+  String categoryDetectedKeywords(String keywords) {
+    return 'Erkannte Keywords: $keywords';
+  }
+
+  @override
+  String get categorySelectCorrect => 'Wähle die richtige Kategorie:';
+
+  @override
+  String get categoryManage => 'Kategorien verwalten';
+
+  @override
+  String get categoryOther => 'Sonstiges';
+
+  @override
+  String get categoryOtherDesc => 'Keine der obigen Kategorien passt';
+
+  @override
+  String categoryChangedTo(String category) {
+    return '✅ Kategorie zu \"$category\" geändert';
+  }
+
+  @override
+  String receiptFor(String title) {
+    return 'Rechnung: \"$title\"';
+  }
+
+  @override
+  String get drawerCategories => 'Kategorien';
 }

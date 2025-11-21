@@ -889,6 +889,72 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Fehler beim Laden der Rechnungen: {error}'**
   String errorLoadingBills(String error);
+
+  /// No description provided for @categorySelect.
+  ///
+  /// In de, this message translates to:
+  /// **'Kategorie auswählen'**
+  String get categorySelect;
+
+  /// No description provided for @categoryEdit.
+  ///
+  /// In de, this message translates to:
+  /// **'Kategorie bearbeiten'**
+  String get categoryEdit;
+
+  /// No description provided for @categoryAutoDetected.
+  ///
+  /// In de, this message translates to:
+  /// **'Automatisch erkannt: {category}'**
+  String categoryAutoDetected(String category);
+
+  /// No description provided for @categoryDetectedKeywords.
+  ///
+  /// In de, this message translates to:
+  /// **'Erkannte Keywords: {keywords}'**
+  String categoryDetectedKeywords(String keywords);
+
+  /// No description provided for @categorySelectCorrect.
+  ///
+  /// In de, this message translates to:
+  /// **'Wähle die richtige Kategorie:'**
+  String get categorySelectCorrect;
+
+  /// No description provided for @categoryManage.
+  ///
+  /// In de, this message translates to:
+  /// **'Kategorien verwalten'**
+  String get categoryManage;
+
+  /// No description provided for @categoryOther.
+  ///
+  /// In de, this message translates to:
+  /// **'Sonstiges'**
+  String get categoryOther;
+
+  /// No description provided for @categoryOtherDesc.
+  ///
+  /// In de, this message translates to:
+  /// **'Keine der obigen Kategorien passt'**
+  String get categoryOtherDesc;
+
+  /// No description provided for @categoryChangedTo.
+  ///
+  /// In de, this message translates to:
+  /// **'✅ Kategorie zu \"{category}\" geändert'**
+  String categoryChangedTo(String category);
+
+  /// No description provided for @receiptFor.
+  ///
+  /// In de, this message translates to:
+  /// **'Rechnung: \"{title}\"'**
+  String receiptFor(String title);
+
+  /// Drawer menu item for categories
+  ///
+  /// In de, this message translates to:
+  /// **'Kategorien'**
+  String get drawerCategories;
 }
 
 class _AppLocalizationsDelegate

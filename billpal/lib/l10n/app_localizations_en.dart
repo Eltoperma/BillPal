@@ -446,4 +446,45 @@ class AppLocalizationsEn extends AppLocalizations {
   String errorLoadingBills(String error) {
     return 'Error loading bills: $error';
   }
+
+  @override
+  String get categorySelect => 'Select category';
+
+  @override
+  String get categoryEdit => 'Edit category';
+
+  @override
+  String categoryAutoDetected(String category) {
+    return 'Auto-detected: $category';
+  }
+
+  @override
+  String categoryDetectedKeywords(String keywords) {
+    return 'Detected keywords: $keywords';
+  }
+
+  @override
+  String get categorySelectCorrect => 'Select the correct category:';
+
+  @override
+  String get categoryManage => 'Manage categories';
+
+  @override
+  String get categoryOther => 'Other';
+
+  @override
+  String get categoryOtherDesc => 'None of the above categories fit';
+
+  @override
+  String categoryChangedTo(String category) {
+    return '✅ Category changed to \"$category\"';
+  }
+
+  @override
+  String receiptFor(String title) {
+    return 'Receipt: \"$title\"';
+  }
+
+  @override
+  String get drawerCategories => 'Categories';
 }

@@ -98,7 +98,8 @@ class ConfigurableCategoryService {
   };
 
   /// Kategorisiert einen Titel basierend auf Konfiguration
-  static String categorizeTitle(String title, {String locale = 'de'}) {
+  static String categorizeTitle(String title, {String locale = 'en'}) {
+    print('🏷️ CategoryService: Categorizing "$title" with locale "$locale"');
     final lowerTitle = title.toLowerCase();
     final Map<String, double> categoryScores = {};
 
@@ -148,11 +149,15 @@ class ConfigurableCategoryService {
           .key;
       
       final category = _categories[bestCategoryId]!;
-      return locale == 'de' ? category.nameDE : category.nameEN;
+      final result = locale == 'de' ? category.nameDE : category.nameEN;
+      print('🏷️ CategoryService: Result for "$title" → "$result" (locale: $locale)');
+      return result;
     }
 
     // Fallback
-    return locale == 'de' ? 'Sonstiges' : 'Other';
+    final fallback = locale == 'de' ? 'Sonstiges' : 'Other';
+    print('🏷️ CategoryService: No match for "$title", using fallback "$fallback" (locale: $locale)');
+    return fallback;
   }
 
   /// Alle verfügbaren Kategorien abrufen

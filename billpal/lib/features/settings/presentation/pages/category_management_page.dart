@@ -16,18 +16,60 @@ class _CategoryManagementPageState extends State<CategoryManagementPage> {
   List<UserCategoryCorrection> _userCorrections = [];
   bool _isLoading = true;
   late String _currentLocale;
+  
+  // Temporary localization helper
+  String _getLocalizedString(String key, {String? param}) {
+    final isGerman = _currentLocale == 'de';
+    switch (key) {
+      case 'categoryManage':
+        return isGerman ? 'Kategorien verwalten' : 'Manage categories';
+      case 'categorySettings':
+        return isGerman ? 'Kategorien-Einstellungen' : 'Category Settings';
+      case 'categorySettingsDesc':
+        return isGerman ? 'Hier kannst du die automatische Kategorisierung anpassen und eigene Regeln erstellen.' : 'Here you can customize automatic categorization and create your own rules.';
+      case 'availableCategories':
+        return isGerman ? 'Verfügbare Kategorien' : 'Available Categories';
+      case 'standardKeywords':
+        return isGerman ? 'Standard Keywords:' : 'Standard Keywords:';
+      case 'yourKeywords':
+        return isGerman ? 'Deine Keywords:' : 'Your Keywords:';
+      case 'keywordAdd':
+        return isGerman ? 'Keyword hinzufügen' : 'Add keyword';
+      case 'yourCorrections':
+        return isGerman ? 'Deine Korrekturen' : 'Your Corrections';
+      case 'correctionsDesc':
+        return isGerman ? 'Rechnungen, bei denen du die automatische Kategorisierung korrigiert hast:' : 'Bills where you corrected the automatic categorization:';
+      case 'keywordAddTitle':
+        return isGerman ? 'Keyword hinzufügen' : 'Add Keyword';
+      case 'keywordAddHint':
+        return isGerman ? 'z.B. "pizzeria", "tankstelle"' : 'e.g. "pizzeria", "gas station"';
+      case 'newKeyword':
+        return isGerman ? 'Neues Keyword' : 'New Keyword';
+      case 'cancel':
+        return isGerman ? 'Abbrechen' : 'Cancel';
+      case 'add':
+        return isGerman ? 'Hinzufügen' : 'Add';
+      case 'andMore':
+        return isGerman ? '... und $param weitere' : '... and $param more';
+      case 'keywords':
+        return isGerman ? 'Keywords' : 'Keywords';
+      default:
+        return key;
+    }
+  }
 
   @override
   void initState() {
     super.initState();
-    _loadData();
+    // Defer loading until after first build
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadData());
   }
 
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
     
     try {
-      _currentLocale = 'de';
+      _currentLocale = CategoryLocaleService.getCurrentLocale(context);
       
       _categories = ConfigurableCategoryService.getAllCategories();
       await _userCategoryService.loadUserKeywords(_currentLocale);
@@ -44,7 +86,7 @@ class _CategoryManagementPageState extends State<CategoryManagementPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Kategorien verwalten'),
+        title: Text(_getLocalizedString('categoryManage')),
         elevation: 0,
       ),
       body: _isLoading
@@ -76,15 +118,15 @@ class _CategoryManagementPageState extends State<CategoryManagementPage> {
               children: [
                 const Icon(Icons.category, size: 28),
                 const SizedBox(width: 12),
-                const Text(
-                  'Kategorien-Einstellungen',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+                Text(
+                  _getLocalizedString('categorySettings'),
+                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
                 ),
               ],
             ),
             const SizedBox(height: 8),
             Text(
-              'Hier kannst du die automatische Kategorisierung anpassen und eigene Regeln erstellen.',
+              _getLocalizedString('categorySettingsDesc'),
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: Colors.grey.shade600,
               ),
@@ -99,9 +141,9 @@ class _CategoryManagementPageState extends State<CategoryManagementPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Verfügbare Kategorien',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+        Text(
+          _getLocalizedString('availableCategories'),
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 12),
         ..._categories.map((category) => _buildCategoryCard(category)),
@@ -116,23 +158,23 @@ class _CategoryManagementPageState extends State<CategoryManagementPage> {
       margin: const EdgeInsets.only(bottom: 8),
       child: ExpansionTile(
         leading: Text(category.icon, style: const TextStyle(fontSize: 24)),
-        title: Text(category.nameDE),
-        subtitle: Text('${category.keywords['de']?.length ?? 0} Keywords'),
+        title: Text(CategoryLocaleService.getCategoryName(category, _currentLocale)),
+        subtitle: Text('${category.keywords[_currentLocale]?.length ?? 0} ${_getLocalizedString('keywords')}'),
         children: [
           Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Standard Keywords:',
-                  style: TextStyle(fontWeight: FontWeight.w600),
+                Text(
+                  _getLocalizedString('standardKeywords'),
+                  style: const TextStyle(fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 8),
                 Wrap(
                   spacing: 8,
                   runSpacing: 4,
-                  children: (category.keywords['de'] ?? [])
+                  children: (category.keywords[_currentLocale] ?? [])
                       .take(10) // Zeige nur die ersten 10
                       .map((keyword) => Chip(
                             label: Text(keyword),
@@ -140,20 +182,20 @@ class _CategoryManagementPageState extends State<CategoryManagementPage> {
                           ))
                       .toList(),
                 ),
-                if ((category.keywords['de']?.length ?? 0) > 10) 
+                if ((category.keywords[_currentLocale]?.length ?? 0) > 10) 
                   Padding(
                     padding: const EdgeInsets.only(top: 8),
                     child: Text(
-                      '... und ${(category.keywords['de']?.length ?? 0) - 10} weitere',
+                      _getLocalizedString('andMore', param: '${(category.keywords[_currentLocale]?.length ?? 0) - 10}'),
                       style: TextStyle(color: Colors.grey.shade600),
                     ),
                   ),
                 
                 if (userKeywords.isNotEmpty) ...[
                   const SizedBox(height: 16),
-                  const Text(
-                    'Deine Keywords:',
-                    style: TextStyle(fontWeight: FontWeight.w600),
+                  Text(
+                    _getLocalizedString('yourKeywords'),
+                    style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: 8),
                   Wrap(
@@ -177,7 +219,7 @@ class _CategoryManagementPageState extends State<CategoryManagementPage> {
                     TextButton.icon(
                       onPressed: () => _addUserKeyword(category.id),
                       icon: const Icon(Icons.add, size: 16),
-                      label: const Text('Keyword hinzufügen'),
+                      label: Text(_getLocalizedString('keywordAdd')),
                     ),
                   ],
                 ),
@@ -197,13 +239,13 @@ class _CategoryManagementPageState extends State<CategoryManagementPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Deine Korrekturen',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+        Text(
+          _getLocalizedString('yourCorrections'),
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 12),
         Text(
-          'Rechnungen, bei denen du die automatische Kategorisierung korrigiert hast:',
+          _getLocalizedString('correctionsDesc'),
           style: TextStyle(color: Colors.grey.shade600),
         ),
         const SizedBox(height: 12),
@@ -232,19 +274,19 @@ class _CategoryManagementPageState extends State<CategoryManagementPage> {
     final result = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Keyword hinzufügen'),
+        title: Text(_getLocalizedString('keywordAddTitle')),
         content: TextField(
           controller: controller,
-          decoration: const InputDecoration(
-            hintText: 'z.B. "pizzeria", "tankstelle"',
-            labelText: 'Neues Keyword',
+          decoration: InputDecoration(
+            hintText: _getLocalizedString('keywordAddHint'),
+            labelText: _getLocalizedString('newKeyword'),
           ),
           autofocus: true,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Abbrechen'),
+            child: Text(_getLocalizedString('cancel')),
           ),
           ElevatedButton(
             onPressed: () {
@@ -252,7 +294,7 @@ class _CategoryManagementPageState extends State<CategoryManagementPage> {
                 Navigator.pop(context, controller.text.trim().toLowerCase());
               }
             },
-            child: const Text('Hinzufügen'),
+            child: Text(_getLocalizedString('add')),
           ),
         ],
       ),

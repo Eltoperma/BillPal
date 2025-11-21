@@ -22,7 +22,7 @@ class DrawerNavList extends StatelessWidget {
         ),
         _NavTile(
           icon: Icons.category_outlined,
-          label: 'Kategorien',
+          label: l10n.drawerCategories,
           route: '/categories',
         ),
         const Divider(height: 32),
