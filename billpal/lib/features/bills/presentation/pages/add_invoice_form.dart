@@ -154,9 +154,31 @@ class _AddInvoiceFormState extends State<AddInvoiceForm> {
     }
 
     // Convert receipt line items to form line items
+    // Use smart item matching: expands quantities and finds best subset
     if (receiptData.items.isNotEmpty) {
       _items.clear();
-      for (final receiptItem in receiptData.items) {
+
+      // Get items with quantities expanded and matched to total
+      final itemsToAdd = receiptData.getItemsMatchingTotal(
+        expandQuantities: true,
+        tolerance: 0.05,
+      );
+
+      AppLogger.bills.info(
+        '📝 Adding ${itemsToAdd.length} items to form '
+        '(${receiptData.items.length} original items)',
+      );
+
+      // Log if items were filtered
+      if (itemsToAdd.length < receiptData.expandedItems.length) {
+        final filtered = receiptData.expandedItems.length - itemsToAdd.length;
+        AppLogger.bills.warning(
+          '⚠️ Filtered out $filtered items to match receipt total '
+          '(${receiptData.total?.toStringAsFixed(2) ?? "N/A"}€)',
+        );
+      }
+
+      for (final receiptItem in itemsToAdd) {
         _items.add(
           LineItem(
             description: receiptItem.description,

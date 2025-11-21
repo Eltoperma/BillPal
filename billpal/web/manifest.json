@@ -1,6 +1,6 @@
 {
-    "name": "billpal",
-    "short_name": "billpal",
+    "name": "BillPal",
+    "short_name": "BillPal",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

@@ -3,6 +3,7 @@ import '../../ocr/receipt_data.dart';
 import 'price_extraction_strategy.dart';
 import 'quantity_extraction_strategy.dart';
 import 'header_footer_detection_strategy.dart';
+import 'number_analysis_strategy.dart';
 
 /// Strategy for extracting line items from receipt text
 ///
@@ -10,21 +11,26 @@ import 'header_footer_detection_strategy.dart';
 /// - HeaderFooterDetectionStrategy: Skip non-item lines
 /// - PriceExtractionStrategy: Extract prices
 /// - QuantityExtractionStrategy: Extract quantities
+/// - NumberAnalysisStrategy: Analyze number relationships for complex items
 class LineItemExtractionStrategy {
   static const AppLogger _logger = AppLogger.parser;
 
   final PriceExtractionStrategy _priceStrategy;
   final QuantityExtractionStrategy _quantityStrategy;
   final HeaderFooterDetectionStrategy _headerFooterStrategy;
+  final NumberAnalysisStrategy _numberAnalysisStrategy;
 
   LineItemExtractionStrategy({
     PriceExtractionStrategy? priceStrategy,
     QuantityExtractionStrategy? quantityStrategy,
     HeaderFooterDetectionStrategy? headerFooterStrategy,
-  })  : _priceStrategy = priceStrategy ?? PriceExtractionStrategy(),
-        _quantityStrategy = quantityStrategy ?? QuantityExtractionStrategy(),
-        _headerFooterStrategy =
-            headerFooterStrategy ?? HeaderFooterDetectionStrategy();
+    NumberAnalysisStrategy? numberAnalysisStrategy,
+  }) : _priceStrategy = priceStrategy ?? PriceExtractionStrategy(),
+       _quantityStrategy = quantityStrategy ?? QuantityExtractionStrategy(),
+       _headerFooterStrategy =
+           headerFooterStrategy ?? HeaderFooterDetectionStrategy(),
+       _numberAnalysisStrategy =
+           numberAnalysisStrategy ?? NumberAnalysisStrategy();
 
   /// Extract all line items from receipt lines
   ///
@@ -87,10 +93,6 @@ class LineItemExtractionStrategy {
           _logger.warning(
             '⚠️ Line ${i + 1} has price but failed to parse: "${line}"',
           );
-          _logger.debug('   → Possible reasons:');
-          _logger.debug('   → 1. Empty description after removing price');
-          _logger.debug('   → 2. Description too long (>150 chars)');
-          _logger.debug('   → 3. Standalone price line (no item name)');
           skippedInvalid++;
         }
       }
@@ -107,10 +109,11 @@ class LineItemExtractionStrategy {
 
   /// Parse a single line into a receipt item
   ///
-  /// Tries three strategies:
+  /// Tries multiple strategies:
   /// 1. Quantity prefix: "2x Pizza Margherita 9.50"
   /// 2. Quantity suffix: "Pizza Margherita x2 9.50"
-  /// 3. Standard format: "Pizza Margherita 9.50"
+  /// 3. Number analysis: "2 x 0,5 zipfer 8,40" (uses all numbers)
+  /// 4. Standard format: "Pizza Margherita 9.50"
   ReceiptLineItem? _parseLineItem(String line) {
     final quantityResult = _quantityStrategy.extractQuantity(line);
 
@@ -142,7 +145,61 @@ class LineItemExtractionStrategy {
       }
     }
 
-    // Strategy 3: Standard format: "Pizza Margherita 9.50"
+    // Strategy 3: Number analysis - extract ALL numbers and analyze relationships
+    // This handles ambiguous cases like "2 x 0,5 zipfer 8,40"
+    final allNumbers = _numberAnalysisStrategy.extractAllNumbers(line);
+    if (allNumbers.length >= 2) {
+      final analysis = _numberAnalysisStrategy.analyzeNumbers(line, allNumbers);
+
+      // Use number analysis if confidence is high enough
+      if (analysis.confidence >= 0.75 &&
+          analysis.mostLikelyTotal != null &&
+          analysis.mostLikelyQuantity != null) {
+        // Extract description by removing all numbers
+        var description = line;
+        for (final number in allNumbers) {
+          // Remove the number and its surrounding patterns
+          if (number == number.toInt().toDouble()) {
+            // Integer
+            final intValue = number.toInt().toString();
+            description = description.replaceAll(RegExp('\\b$intValue\\b'), '');
+          } else {
+            // Decimal - remove with both comma and dot formats
+            final intPart = number.truncate();
+            final decimalPart = ((number - intPart) * 100).round();
+            final decimalStr = decimalPart.toString().padLeft(2, '0');
+            description = description.replaceAll(
+              RegExp('$intPart[.,]\\s*$decimalStr'),
+              '',
+            );
+          }
+        }
+
+        // Clean up description
+        description = description
+            .replaceAll(RegExp(r'[xX×*]'), '')
+            .replaceAll(RegExp(r'\s+'), ' ')
+            .trim();
+
+        if (description.isNotEmpty && description.length <= 150) {
+          _logger.debug(
+            '   → Number analysis: ${analysis.mostLikelyQuantity}x '
+            '× ${analysis.mostLikelyUnitPrice?.toStringAsFixed(2)}€ '
+            '= ${analysis.mostLikelyTotal?.toStringAsFixed(2)}€ '
+            '(confidence: ${(analysis.confidence * 100).toStringAsFixed(0)}%)',
+          );
+
+          return ReceiptLineItem(
+            description: description,
+            quantity: analysis.mostLikelyQuantity!,
+            totalPrice: analysis.mostLikelyTotal,
+            unitPrice: analysis.mostLikelyUnitPrice,
+          );
+        }
+      }
+    }
+
+    // Strategy 4: Standard format: "Pizza Margherita 9.50"
     final price = _priceStrategy.extractPrice(line);
     if (price != null && price > 0) {
       var description = _priceStrategy.removePriceFromLine(line);
@@ -227,4 +284,3 @@ class LineItemExtractionStrategy {
     }
   }
 }
-

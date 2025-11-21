@@ -58,6 +58,10 @@ class TotalExtractionStrategy {
   }
 
   double? _extractTotalByKeyword(List<String> lines) {
+    double? largestPrice;
+    String? largestKeyword;
+    bool isNextLine = false;
+
     for (int i = lines.length - 1; i >= 0; i--) {
       final line = lines[i];
       final lineLower = line.toLowerCase();
@@ -71,26 +75,43 @@ class TotalExtractionStrategy {
       if (keyword.isNotEmpty) {
         final price = _priceStrategy.extractPrice(line);
         if (price != null && price > 0) {
-          _logger.info(
-            '✅ Total found with keyword "$keyword": ${price.toStringAsFixed(2)}€',
+          if (largestPrice == null || price > largestPrice) {
+            largestPrice = price;
+            largestKeyword = keyword;
+            isNextLine = false;
+          }
+          _logger.debug(
+            '💰 Total candidate with keyword "$keyword": ${price.toStringAsFixed(2)}€',
           );
-          return price;
         }
 
         // Check next line if keyword line has no price
         if (i + 1 < lines.length) {
           final nextPrice = _priceStrategy.extractPrice(lines[i + 1]);
           if (nextPrice != null && nextPrice > 0) {
-            _logger.info(
-              '✅ Total found (next line after keyword "$keyword"): ${nextPrice.toStringAsFixed(2)}€',
+            if (largestPrice == null || nextPrice > largestPrice) {
+              largestPrice = nextPrice;
+              largestKeyword = keyword;
+              isNextLine = true;
+            }
+            _logger.debug(
+              '💰 Total candidate (next line after keyword "$keyword"): ${nextPrice.toStringAsFixed(2)}€',
             );
-            return nextPrice;
           }
         }
       }
     }
 
-    return null;
+    if (largestPrice != null) {
+      final location = isNextLine
+          ? ' (next line after keyword "$largestKeyword")'
+          : ' with keyword "$largestKeyword"';
+      _logger.info(
+        '✅ Total found$location: ${largestPrice.toStringAsFixed(2)}€',
+      );
+    }
+
+    return largestPrice;
   }
 
   double? _extractLargestPriceInLastLines(List<String> lines) {
