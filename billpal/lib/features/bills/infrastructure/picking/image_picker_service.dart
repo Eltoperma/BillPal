@@ -10,7 +10,7 @@ class ImagePickerService {
         source: ImageSource.camera,
         maxWidth: 1920,
         maxHeight: 1920,
-        imageQuality: 85,
+        imageQuality: 100,
       );
       return photo != null ? File(photo.path) : null;
     } catch (e) {
@@ -24,7 +24,7 @@ class ImagePickerService {
         source: ImageSource.gallery,
         maxWidth: 1920,
         maxHeight: 1920,
-        imageQuality: 85,
+        imageQuality: 100,
       );
       return image != null ? File(image.path) : null;
     } catch (e) {
