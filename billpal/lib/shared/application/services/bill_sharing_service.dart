@@ -7,6 +7,7 @@ import 'package:billpal/features/bills/bill_service.dart';
 import 'package:billpal/core/logging/app_logger.dart';
 import 'package:billpal/core/database/repositories/repositories.dart';
 import 'package:billpal/core/database/repositories/mock_repositories.dart';
+import 'package:billpal/core/services/data_refresh_service.dart';
 
 /// Service für die Verwaltung von geteilten Rechnungen zwischen Freunden
 /// 
@@ -17,12 +18,15 @@ class BillSharingService {
   factory BillSharingService() => _instance;
   BillSharingService._internal() {
     _positionRepo = kIsWeb ? MockPositionRepository() : PositionRepository();
+    _billRepo = kIsWeb ? MockBillRepository() : BillRepository();
   }
 
   final UserService _userService = UserService(); // Zentrale User-Verwaltung
+  final DataRefreshService _refreshService = DataRefreshService();
   final List<SharedBill> _sharedBills = [];
   final Random _random = Random();
   late final dynamic _positionRepo; // Mock oder Real Repository
+  late final dynamic _billRepo; // Mock oder Real Repository
 
   /// Initialisiert den Service mit Demo-Daten oder lädt echte Rechnungen
   /// 
@@ -265,10 +269,20 @@ class BillSharingService {
       final realTotal = await billService.getInvoiceTotal(billId);
       AppLogger.sql.debug('Echte Gesamtsumme für Bill $billId: $realTotal€');
       
-      // App-User Logic: DU erstellst Rechnung → DU hast bezahlt → DIR wird geschuldet
-      final paidBy = await getCurrentUser(); // Immer der aktuelle App-User
+      // Dynamische paidBy Logik basierend auf paid_by_user_id
+      final paidByUserId = rawBill['paid_by_user_id'] as int?;
+      Person paidBy;
       
-      AppLogger.sql.debug('Rechnung bezahlt von: ${paidBy.name} (App-User)');
+      if (paidByUserId != null) {
+        // Finde Person basierend auf paid_by_user_id
+        final paidByPerson = await _findPersonByUserId(paidByUserId);
+        paidBy = paidByPerson ?? await getCurrentUser(); // Fallback auf aktuellen User
+        AppLogger.sql.debug('Rechnung bezahlt von: ${paidBy.name} (paid_by_user_id: $paidByUserId)');
+      } else {
+        // Fallback: Aktueller User (alte Logik für bestehende Rechnungen)
+        paidBy = await getCurrentUser();
+        AppLogger.sql.debug('Rechnung bezahlt von: ${paidBy.name} (Fallback: kein paid_by_user_id)');
+      }
       
       // Lade echte Positionen und Personen
       final completeInvoice = await billService.getCompleteInvoice(billId);
@@ -288,8 +302,8 @@ class BillSharingService {
         if (assignedPerson != null) {
           allInvolvedPeople.add(assignedPerson);
           
-          // App-User Logic: 
-          // - paidBy = App-User (DU hast bezahlt)
+          // Dynamische Schulden-Logic: 
+          // - paidBy = Person die bezahlt hat (aus paid_by_user_id)
           // - sharedWith = assignedPerson (WER schuldet für diesen Posten)
           
           items.add(BillItem(
@@ -300,9 +314,9 @@ class BillSharingService {
           ));
           
           if (assignedPerson.id == paidBy.id) {
-            AppLogger.bills.debug('Position: "${pos['desc']}" → DU selbst (${posAmount}€) [KEINE SCHULD]');
+            AppLogger.bills.debug('Position: "${pos['desc']}" → ${assignedPerson.name} hat selbst bezahlt (${posAmount}€) [KEINE SCHULD]');
           } else {
-            AppLogger.bills.debug('Position: "${pos['desc']}" → ${assignedPerson.name} schuldet DIR (${posAmount}€) ✅');
+            AppLogger.bills.debug('Position: "${pos['desc']}" → ${assignedPerson.name} schuldet ${paidBy.name} (${posAmount}€) ✅');
           }
         }
       }
@@ -318,6 +332,10 @@ class BillSharingService {
         AppLogger.bills.debug('📍 Fallback-Item: Keine Positionen gefunden, keine Schulden');
       }
       
+      // Status aus Datenbank laden oder fallback
+      final statusString = rawBill['status'] as String? ?? 'shared';
+      final status = _stringToBillStatus(statusString);
+      
       final sharedBill = SharedBill(
         id: billId.toString(),
         title: rawBill['title'] ?? 'Rechnung',
@@ -327,7 +345,7 @@ class BillSharingService {
         eventName: rawBill['title'],
         paidBy: paidBy,
         items: items,
-        status: BillStatus.shared,
+        status: status,
         createdAt: DateTime.tryParse(rawBill['date'] ?? '') ?? DateTime.now(),
       );
       
@@ -601,6 +619,10 @@ class BillSharingService {
         // Dann prüfen ob die gesamte Bill jetzt beglichen ist
         await _checkAndUpdateBillSettlementStatus(positionId);
         
+        // UI Refresh triggern nach Settlement-Änderung
+        _refreshService.notifyDebtsChanged();
+        _refreshService.notifyBillsChanged();
+        
       } else {
         AppLogger.bills.warning('⚠️ Position $positionId nicht gefunden');
       }
@@ -632,20 +654,45 @@ class BillSharingService {
         // Alle Positionen sind beglichen!
         AppLogger.bills.success('🎉 Bill $billId ist vollständig beglichen! Status wird aktualisiert.');
         
-        // TODO: Bill-Status in Datenbank aktualisieren (falls Bills-Tabelle erweitert wird)
-        // Für jetzt: Nur loggen
+        // Bill-Status in Datenbank persistent speichern
+        await _billRepo.updateBillStatus(billId, 'settled');
         
         // In-Memory Bills aktualisieren
         await _updateInMemoryBillStatus(billId.toString(), BillStatus.settled);
         
+        // UI Refresh triggern
+        _refreshService.notifyBillsChanged();
+        _refreshService.notifyDebtsChanged();
+        
       } else if (settledPositions.isNotEmpty && openPositions.isNotEmpty) {
         // Teilweise beglichen
         AppLogger.bills.info('📊 Bill $billId ist teilweise beglichen');
-        await _updateInMemoryBillStatus(billId.toString(), BillStatus.shared); // Bleibt "shared" (teilweise)
+        await _billRepo.updateBillStatus(billId, 'shared'); // Bleibt "shared"
+        await _updateInMemoryBillStatus(billId.toString(), BillStatus.shared);
+        
+        // UI Refresh triggern auch für teilweise beglichene Bills
+        _refreshService.notifyBillsChanged();
+        _refreshService.notifyDebtsChanged();
       }
       
     } catch (e) {
       AppLogger.bills.error('Fehler beim Prüfen des Bill-Settlement-Status: $e');
+    }
+  }
+
+  /// Konvertiert String zu BillStatus Enum
+  BillStatus _stringToBillStatus(String statusString) {
+    switch (statusString.toLowerCase()) {
+      case 'draft':
+        return BillStatus.draft;
+      case 'shared':
+        return BillStatus.shared;
+      case 'settled':
+        return BillStatus.settled;
+      case 'cancelled':
+        return BillStatus.cancelled;
+      default:
+        return BillStatus.shared;
     }
   }
 
@@ -689,10 +736,15 @@ class BillSharingService {
         final assignedUser = await _userService.getUserById(pos['user_id']);
         final amount = (pos['amount'] as num).toDouble();
         
-        if (assignedUser != null && assignedUser.id != currentUser.id) {
-          // Nur wenn jemand anderes zugeordnet ist (nicht der App-User selbst)
+        if (assignedUser != null) {
+          // Berechne Schulden basierend auf Schuldner (assignedUser)
           debts[assignedUser] = (debts[assignedUser] ?? 0.0) + amount;
-          AppLogger.bills.debug('💸 ${assignedUser.name} schuldet ${amount}€ für "${pos['desc']}"');
+          
+          if (assignedUser.id == currentUser.id) {
+            AppLogger.bills.debug('💸 Ich schulde ${amount}€ für "${pos['desc']}"');
+          } else {
+            AppLogger.bills.debug('💸 ${assignedUser.name} schuldet ${amount}€ für "${pos['desc']}"');
+          }
         }
       }
       

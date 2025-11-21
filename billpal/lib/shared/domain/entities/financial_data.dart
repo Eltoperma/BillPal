@@ -179,7 +179,7 @@ class PieSlice {
     required this.billCount,
   });
 
-  String get description => '$billCount ${billCount == 1 ? 'Rechnung' : 'Rechnungen'}';
+  String get description => '$billCount Bill${billCount == 1 ? '' : 's'}'; // Placeholder - wird in UI lokalisiert
 }
 
 /// Freundschafts-Statistik

@@ -4,6 +4,7 @@ import 'package:billpal/shared/application/services.dart';
 import '../../../../core/logging/app_logger.dart';
 import 'package:billpal/core/utils/currency.dart';
 import 'package:intl/intl.dart';
+import 'package:billpal/core/mixins/auto_refresh_mixin.dart';
 import 'bill_detail_page.dart';
 
 /// Vollständige Rechnungshistorie-Seite
@@ -21,7 +22,7 @@ class BillHistoryPage extends StatefulWidget {
   State<BillHistoryPage> createState() => _BillHistoryPageState();
 }
 
-class _BillHistoryPageState extends State<BillHistoryPage> {
+class _BillHistoryPageState extends State<BillHistoryPage> with AutoRefreshMixin {
   final BillSharingService _analyticsService = BillSharingService();
   
   List<SharedBill> _allBills = [];
@@ -30,6 +31,14 @@ class _BillHistoryPageState extends State<BillHistoryPage> {
   String _searchQuery = '';
   BillStatus? _selectedStatus;
   String _sortBy = 'date_desc'; // date_desc, date_asc, amount_desc, amount_asc
+
+  @override
+  List<String> get refreshEvents => ['bills_changed'];
+
+  @override
+  Future<void> onDataRefresh() async {
+    await _loadBills();
+  }
 
   @override
   void initState() {

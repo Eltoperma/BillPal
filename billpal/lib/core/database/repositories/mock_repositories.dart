@@ -46,6 +46,19 @@ class MockBillRepository {
     return 0;
   }
 
+  /// Aktualisiert den Status einer Bill (für Web-Mock)
+  Future<int> updateBillStatus(int billId, String status) async {
+    AppLogger.sql.debug('🌐 MockBillRepository.updateBillStatus: $billId → $status');
+    
+    final index = _bills.indexWhere((bill) => bill['id'] == billId);
+    if (index != -1) {
+      _bills[index]['status'] = status;
+      AppLogger.sql.success('🌐 Mock Bill-Status aktualisiert: $billId → $status');
+      return 1;
+    }
+    return 0;
+  }
+
   Future<List<Map<String, dynamic>>> getBillsByUserId(int userId) async {
     return _bills.where((bill) => bill['user_id'] == userId).toList();
   }

@@ -536,6 +536,30 @@ abstract class AppLocalizations {
   /// **'Summe'**
   String get sum;
 
+  /// No description provided for @whoPaidLabel.
+  ///
+  /// In de, this message translates to:
+  /// **'Wer hat bezahlt?'**
+  String get whoPaidLabel;
+
+  /// No description provided for @whoPaidHint.
+  ///
+  /// In de, this message translates to:
+  /// **'Person auswählen, die die Rechnung bezahlt hat'**
+  String get whoPaidHint;
+
+  /// No description provided for @iPaid.
+  ///
+  /// In de, this message translates to:
+  /// **'Ich habe bezahlt'**
+  String get iPaid;
+
+  /// No description provided for @someoneElsePaid.
+  ///
+  /// In de, this message translates to:
+  /// **'Jemand anderes hat bezahlt'**
+  String get someoneElsePaid;
+
   /// No description provided for @atLeastOnePosition.
   ///
   /// In de, this message translates to:
@@ -889,6 +913,120 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Fehler beim Laden der Rechnungen: {error}'**
   String errorLoadingBills(String error);
+
+  /// No description provided for @categorySelect.
+  ///
+  /// In de, this message translates to:
+  /// **'Kategorie auswählen'**
+  String get categorySelect;
+
+  /// No description provided for @categoryEdit.
+  ///
+  /// In de, this message translates to:
+  /// **'Kategorie bearbeiten'**
+  String get categoryEdit;
+
+  /// No description provided for @categoryAutoDetected.
+  ///
+  /// In de, this message translates to:
+  /// **'Automatisch erkannt: {category}'**
+  String categoryAutoDetected(String category);
+
+  /// No description provided for @categoryDetectedKeywords.
+  ///
+  /// In de, this message translates to:
+  /// **'Erkannte Keywords: {keywords}'**
+  String categoryDetectedKeywords(String keywords);
+
+  /// No description provided for @categorySelectCorrect.
+  ///
+  /// In de, this message translates to:
+  /// **'Wähle die richtige Kategorie:'**
+  String get categorySelectCorrect;
+
+  /// No description provided for @categoryManage.
+  ///
+  /// In de, this message translates to:
+  /// **'Kategorien verwalten'**
+  String get categoryManage;
+
+  /// No description provided for @categoryOther.
+  ///
+  /// In de, this message translates to:
+  /// **'Sonstiges'**
+  String get categoryOther;
+
+  /// No description provided for @categoryOtherDesc.
+  ///
+  /// In de, this message translates to:
+  /// **'Keine der obigen Kategorien passt'**
+  String get categoryOtherDesc;
+
+  /// No description provided for @categoryChangedTo.
+  ///
+  /// In de, this message translates to:
+  /// **'✅ Kategorie zu \"{category}\" geändert'**
+  String categoryChangedTo(String category);
+
+  /// No description provided for @receiptFor.
+  ///
+  /// In de, this message translates to:
+  /// **'Rechnung: \"{title}\"'**
+  String receiptFor(String title);
+
+  /// Drawer menu item for categories
+  ///
+  /// In de, this message translates to:
+  /// **'Kategorien'**
+  String get drawerCategories;
+
+  /// No description provided for @categoryRestaurantFood.
+  ///
+  /// In de, this message translates to:
+  /// **'Restaurant & Essen'**
+  String get categoryRestaurantFood;
+
+  /// No description provided for @categoryEntertainment.
+  ///
+  /// In de, this message translates to:
+  /// **'Unterhaltung'**
+  String get categoryEntertainment;
+
+  /// No description provided for @categoryTransport.
+  ///
+  /// In de, this message translates to:
+  /// **'Transport'**
+  String get categoryTransport;
+
+  /// No description provided for @categoryShopping.
+  ///
+  /// In de, this message translates to:
+  /// **'Einkaufen'**
+  String get categoryShopping;
+
+  /// No description provided for @categoryHousing.
+  ///
+  /// In de, this message translates to:
+  /// **'Wohnen & Fixkosten'**
+  String get categoryHousing;
+
+  /// No description provided for @categoryOtherGeneral.
+  ///
+  /// In de, this message translates to:
+  /// **'Sonstiges'**
+  String get categoryOtherGeneral;
+
+  /// Single bill count for pie chart
+  ///
+  /// In de, this message translates to:
+  /// **'{count} Rechnung'**
+  String billCountSingle(int count);
+
+  /// Plural bill count for pie chart
+  ///
+  /// In de, this message translates to:
+  /// **'{count} Rechnungen'**
+  String billCountPlural(int count);
 }
 
 class _AppLocalizationsDelegate

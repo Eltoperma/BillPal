@@ -238,6 +238,18 @@ class AppLocalizationsDe extends AppLocalizations {
   String get sum => 'Summe';
 
   @override
+  String get whoPaidLabel => 'Wer hat bezahlt?';
+
+  @override
+  String get whoPaidHint => 'Person auswählen, die die Rechnung bezahlt hat';
+
+  @override
+  String get iPaid => 'Ich habe bezahlt';
+
+  @override
+  String get someoneElsePaid => 'Jemand anderes hat bezahlt';
+
+  @override
   String get atLeastOnePosition =>
       'Bitte mindestens eine gültige Position angeben.';
 
@@ -446,5 +458,74 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String errorLoadingBills(String error) {
     return 'Fehler beim Laden der Rechnungen: $error';
+  }
+
+  @override
+  String get categorySelect => 'Kategorie auswählen';
+
+  @override
+  String get categoryEdit => 'Kategorie bearbeiten';
+
+  @override
+  String categoryAutoDetected(String category) {
+    return 'Automatisch erkannt: $category';
+  }
+
+  @override
+  String categoryDetectedKeywords(String keywords) {
+    return 'Erkannte Keywords: $keywords';
+  }
+
+  @override
+  String get categorySelectCorrect => 'Wähle die richtige Kategorie:';
+
+  @override
+  String get categoryManage => 'Kategorien verwalten';
+
+  @override
+  String get categoryOther => 'Sonstiges';
+
+  @override
+  String get categoryOtherDesc => 'Keine der obigen Kategorien passt';
+
+  @override
+  String categoryChangedTo(String category) {
+    return '✅ Kategorie zu \"$category\" geändert';
+  }
+
+  @override
+  String receiptFor(String title) {
+    return 'Rechnung: \"$title\"';
+  }
+
+  @override
+  String get drawerCategories => 'Kategorien';
+
+  @override
+  String get categoryRestaurantFood => 'Restaurant & Essen';
+
+  @override
+  String get categoryEntertainment => 'Unterhaltung';
+
+  @override
+  String get categoryTransport => 'Transport';
+
+  @override
+  String get categoryShopping => 'Einkaufen';
+
+  @override
+  String get categoryHousing => 'Wohnen & Fixkosten';
+
+  @override
+  String get categoryOtherGeneral => 'Sonstiges';
+
+  @override
+  String billCountSingle(int count) {
+    return '$count Rechnung';
+  }
+
+  @override
+  String billCountPlural(int count) {
+    return '$count Rechnungen';
   }
 }
