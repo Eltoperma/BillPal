@@ -4,6 +4,7 @@ import 'package:billpal/shared/application/services.dart';
 import 'package:billpal/core/app_mode/app_mode_service.dart';
 import 'package:billpal/features/friends/presentation/pages/friends_management_page.dart';
 import 'package:billpal/core/logging/app_logger.dart';
+import 'package:billpal/l10n/app_localizations.dart';
 
 /// Collapsible Friends Card für das Dashboard
 /// Zeigt eine Vorschau der Freunde mit Möglichkeit zum Erweitern
@@ -67,6 +68,7 @@ class _FriendsPreviewCardState extends State<FriendsPreviewCard> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
@@ -81,21 +83,21 @@ class _FriendsPreviewCardState extends State<FriendsPreviewCard> {
               color: colorScheme.primary,
             ),
             title: Text(
-              'Meine Freunde',
+              l10n.myFriends,
               style: textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
             ),
             subtitle: _isLoading
-                ? Text('Lädt...')
-                : Text('${_friends.length} Freund${_friends.length == 1 ? '' : 'e'}'),
+                ? Text(l10n.loading)
+                : Text(_friends.length == 1 ? l10n.friendCount(_friends.length) : l10n.friendCountPlural(_friends.length)),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 IconButton(
-                  icon: Icon(Icons.person_add),
+                  icon: const Icon(Icons.person_add),
                   onPressed: _showAddFriendDialog,
-                  tooltip: 'Freund hinzufügen',
+                  tooltip: l10n.addFriend,
                 ),
                 IconButton(
                   icon: Icon(
@@ -129,6 +131,7 @@ class _FriendsPreviewCardState extends State<FriendsPreviewCard> {
   }
 
   Widget _buildExpandedContent() {
+    final l10n = AppLocalizations.of(context)!;
     if (_isLoading) {
       return const Padding(
         padding: EdgeInsets.all(16.0),
@@ -148,14 +151,14 @@ class _FriendsPreviewCardState extends State<FriendsPreviewCard> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Noch keine Freunde hinzugefügt',
+              l10n.noFriendsYet,
               style: Theme.of(context).textTheme.bodyMedium,
             ),
             const SizedBox(height: 16),
             ElevatedButton.icon(
               onPressed: _showAddFriendDialog,
-              icon: Icon(Icons.person_add),
-              label: Text('Ersten Freund hinzufügen'),
+              icon: const Icon(Icons.person_add),
+              label: Text(l10n.addFirstFriend),
             ),
             const SizedBox(height: 8),
           ],
@@ -217,16 +220,16 @@ class _FriendsPreviewCardState extends State<FriendsPreviewCard> {
               Expanded(
                 child: OutlinedButton.icon(
                   onPressed: _showAddFriendDialog,
-                  icon: Icon(Icons.person_add),
-                  label: Text('Freund hinzufügen'),
+                  icon: const Icon(Icons.person_add),
+                  label: Text(l10n.addFriend),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: ElevatedButton.icon(
                   onPressed: _navigateToFriendsPage,
-                  icon: Icon(Icons.manage_accounts),
-                  label: Text('Alle verwalten'),
+                  icon: const Icon(Icons.manage_accounts),
+                  label: Text(l10n.manageAll),
                 ),
               ),
             ],
@@ -237,6 +240,7 @@ class _FriendsPreviewCardState extends State<FriendsPreviewCard> {
   }
 
   Widget _buildFooterActions() {
+    final l10n = AppLocalizations.of(context)!;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
@@ -247,7 +251,7 @@ class _FriendsPreviewCardState extends State<FriendsPreviewCard> {
               height: 32,
               child: _friends.isEmpty
                   ? Text(
-                      'Keine Freunde',
+                      l10n.noFriends,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
@@ -285,7 +289,7 @@ class _FriendsPreviewCardState extends State<FriendsPreviewCard> {
           
           TextButton(
             onPressed: _navigateToFriendsPage,
-            child: Text('Alle anzeigen'),
+            child: Text(l10n.showAll),
           ),
         ],
       ),
@@ -293,6 +297,7 @@ class _FriendsPreviewCardState extends State<FriendsPreviewCard> {
   }
 
   Future<void> _showAddFriendDialog() async {
+    final l10n = AppLocalizations.of(context)!;
     final result = await showDialog<Person>(
       context: context,
       builder: (context) => _AddFriendDialog(),
@@ -308,13 +313,13 @@ class _FriendsPreviewCardState extends State<FriendsPreviewCard> {
         await _loadFriends(); // Refresh
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('${result.name} wurde hinzugefügt')),
+            SnackBar(content: Text(l10n.friendAdded(result.name))),
           );
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Fehler beim Hinzufügen: $e')),
+            SnackBar(content: Text(l10n.errorAddingFriend(e.toString()))),
           );
         }
       }
@@ -344,8 +349,9 @@ class _AddFriendDialogState extends State<_AddFriendDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return AlertDialog(
-      title: Text('Freund hinzufügen'),
+      title: Text(l10n.addFriend),
       content: Form(
         key: _formKey,
         child: Column(
@@ -354,12 +360,12 @@ class _AddFriendDialogState extends State<_AddFriendDialog> {
             TextFormField(
               controller: _nameController,
               decoration: InputDecoration(
-                labelText: 'Name *',
-                border: OutlineInputBorder(),
+                labelText: l10n.nameLabel,
+                border: const OutlineInputBorder(),
               ),
               validator: (value) {
                 if (value?.trim().isEmpty ?? true) {
-                  return 'Name ist erforderlich';
+                  return l10n.nameRequired;
                 }
                 return null;
               },
@@ -368,8 +374,8 @@ class _AddFriendDialogState extends State<_AddFriendDialog> {
             TextFormField(
               controller: _emailController,
               decoration: InputDecoration(
-                labelText: 'Email (optional)',
-                border: OutlineInputBorder(),
+                labelText: l10n.emailLabel,
+                border: const OutlineInputBorder(),
               ),
               keyboardType: TextInputType.emailAddress,
             ),
@@ -377,8 +383,8 @@ class _AddFriendDialogState extends State<_AddFriendDialog> {
             TextFormField(
               controller: _phoneController,
               decoration: InputDecoration(
-                labelText: 'Telefon (optional)',
-                border: OutlineInputBorder(),
+                labelText: l10n.phoneLabel,
+                border: const OutlineInputBorder(),
               ),
               keyboardType: TextInputType.phone,
             ),
@@ -388,7 +394,7 @@ class _AddFriendDialogState extends State<_AddFriendDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: Text('Abbrechen'),
+          child: Text(l10n.cancel),
         ),
         ElevatedButton(
           onPressed: () {
@@ -405,7 +411,7 @@ class _AddFriendDialogState extends State<_AddFriendDialog> {
               Navigator.pop(context, person);
             }
           },
-          child: Text('Hinzufügen'),
+          child: Text(l10n.add),
         ),
       ],
     );

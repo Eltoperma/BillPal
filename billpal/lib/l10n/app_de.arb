@@ -1,0 +1,309 @@
+{
+  "@@locale": "de",
+  
+  "appTitle": "BillPal",
+  "@appTitle": {
+    "description": "Name der App"
+  },
+  "appSubtitle": "Geteilte Rechnungen mit Freunden",
+  "@appSubtitle": {
+    "description": "Untertitel der App"
+  },
+  
+  "cancel": "Abbrechen",
+  "save": "Speichern",
+  "close": "Schließen",
+  "delete": "Löschen",
+  "edit": "Bearbeiten",
+  "search": "Suchen",
+  "add": "Hinzufügen",
+  "remove": "Entfernen",
+  "back": "Zurück",
+  "ok": "OK",
+  "yes": "Ja",
+  "no": "Nein",
+  "confirm": "Bestätigen",
+  "loading": "Lädt...",
+  "error": "Fehler",
+  "success": "Erfolg",
+  "menu": "Menü",
+  "refresh": "Aktualisieren",
+  
+  "drawerDashboard": "Dashboard",
+  "drawerHistory": "Historie",
+  "drawerMyFriends": "Meine Freunde",
+  "drawerAppearance": "ERSCHEINUNGSBILD",
+  "drawerLanguage": "SPRACHE",
+  "drawerLanguageInfo": "Sprachen und Theme wirken sofort app-weit.",
+  
+  "themeSystem": "System",
+  "themeLight": "Hell",
+  "themeDark": "Dunkel",
+  
+  "localeSystem": "System",
+  "localeGerman": "Deutsch",
+  "localeEnglish": "English",
+  
+  "dashboardTitle": "BillPal",
+  "youWillReceive": "Du bekommst {amount}",
+  "@youWillReceive": {
+    "description": "Zeigt an, dass der Benutzer Geld bekommt",
+    "placeholders": {
+      "amount": {
+        "type": "String",
+        "example": "50,00 €"
+      }
+    }
+  },
+  "youOwe": "Du schuldest {amount}",
+  "@youOwe": {
+    "description": "Zeigt an, dass der Benutzer Geld schuldet",
+    "placeholders": {
+      "amount": {
+        "type": "String",
+        "example": "30,00 €"
+      }
+    }
+  },
+  
+  "currentDebts": "Aktuelle Schulden",
+  "youOweColon": "Du schuldest:",
+  "owedToYouColon": "Dir wird geschuldet:",
+  "allBalanced": "Alles ausgeglichen! 🎉",
+  "noOpenDebts": "Du hast keine offenen Schulden",
+  
+  "recentBills": "Letzte Rechnungen",
+  "showAll": "Alle anzeigen",
+  "noBillsYet": "Noch keine Rechnungen",
+  "createFirstBill": "Erstelle deine erste geteilte Rechnung",
+  "billHistory": "Rechnungshistorie",
+  "owedToMe": "Dir wird geschuldet",
+  "iOwe": "Du schuldest",
+  "paidByMe": "Von dir bezahlt",
+  "paidBy": "Bezahlt von {name}",
+  "@paidBy": {
+    "description": "Zeigt an, wer die Rechnung bezahlt hat",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Max"
+      }
+    }
+  },
+  "itemCount": "{count} Position",
+  "@itemCount": {
+    "description": "Anzahl der Positionen (Singular)",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "1"
+      }
+    }
+  },
+  "itemCountPlural": "{count} Positionen",
+  "@itemCountPlural": {
+    "description": "Anzahl der Positionen (Plural)",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "5"
+      }
+    }
+  },
+  
+  "statusDraft": "Entwurf",
+  "statusShared": "Geteilt",
+  "statusSettled": "Beglichen",
+  "statusCancelled": "Storniert",
+  
+  "addBill": "Rechnung hinzufügen",
+  "shareBill": "Rechnung teilen",
+  "titleLabel": "Titel *",
+  "titleHint": "z. B. Pizzaabend, Airbnb, Tanken",
+  "titleRequired": "Titel erforderlich",
+  "dateTimeLabel": "Datum & Zeit *",
+  "positions": "Positionen",
+  "addPosition": "Position hinzufügen",
+  "description": "Bezeichnung",
+  "descriptionHint": "z. B. Margherita, Maut",
+  "required": "Erforderlich",
+  "amountGross": "Betrag (Brutto)",
+  "invalid": "Ungültig",
+  "mustBeGreaterZero": "Muss > 0 sein",
+  "person": "Person",
+  "pleaseSelect": "Bitte wählen",
+  "removePosition": "Position entfernen",
+  "sum": "Summe",
+  "atLeastOnePosition": "Bitte mindestens eine gültige Position angeben.",
+  "billSavedSuccess": "Rechnung erfolgreich gespeichert! ID: {id}",
+  "@billSavedSuccess": {
+    "description": "Erfolgsmeldung nach Speichern",
+    "placeholders": {
+      "id": {
+        "type": "int",
+        "example": "42"
+      }
+    }
+  },
+  "errorSaving": "Fehler beim Speichern: {error}",
+  "@errorSaving": {
+    "description": "Fehlermeldung beim Speichern",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  
+  "manualEntry": "Manuell eingeben",
+  "takePhoto": "Foto aufnehmen",
+  "importFromGallery": "Aus Galerie/Dateien importieren",
+  "ocrNotSupported": "OCR wird im Web nicht unterstützt.\nBitte auf Android oder iOS ausführen.",
+  "processingReceipt": "Beleg wird verarbeitet...",
+  "noTextRecognized": "Kein Text erkannt. Bitte versuche es erneut.\nTipps: Gute Beleuchtung, flacher Beleg, scharf fokussiert.",
+  "couldNotExtractData": "Konnte keine Rechnungsdaten extrahieren.\nÖffne das Formular zum manuellen Eingeben.",
+  "details": "Details",
+  "ocrRawText": "OCR Rohtext",
+  "errorScanning": "Fehler beim Scannen: {error}",
+  "@errorScanning": {
+    "description": "Fehlermeldung beim Scannen",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  
+  "myFriends": "Meine Freunde",
+  "addFriend": "Freund hinzufügen",
+  "friendAdded": "{name} wurde hinzugefügt",
+  "@friendAdded": {
+    "description": "Erfolgsmeldung nach Hinzufügen eines Freundes",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "friendRemoved": "{name} wurde entfernt",
+  "@friendRemoved": {
+    "description": "Erfolgsmeldung nach Entfernen eines Freundes",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "errorAddingFriend": "Fehler beim Hinzufügen: {error}",
+  "@errorAddingFriend": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorRemovingFriend": "Fehler beim Entfernen: {error}",
+  "@errorRemovingFriend": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "removeFriend": "Freund entfernen",
+  "confirmRemoveFriend": "Möchtest du {name} wirklich aus deiner Freundesliste entfernen?",
+  "@confirmRemoveFriend": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "searchFriends": "Freunde suchen...",
+  "noFriendsYet": "Noch keine Freunde hinzugefügt",
+  "addFriendsToShare": "Füge Freunde hinzu, um Rechnungen zu teilen",
+  "addFirstFriend": "Ersten Freund hinzufügen",
+  "noFriendsFound": "Keine Freunde gefunden für \"{query}\"",
+  "@noFriendsFound": {
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "tryDifferentSearch": "Versuche einen anderen Suchbegriff",
+  "nameLabel": "Name *",
+  "nameRequired": "Name ist erforderlich",
+  "emailLabel": "Email (optional)",
+  "phoneLabel": "Telefon (optional)",
+  "friendCount": "{count} Freund",
+  "@friendCount": {
+    "description": "Anzahl der Freunde (Singular)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "friendCountPlural": "{count} Freunde",
+  "@friendCountPlural": {
+    "description": "Anzahl der Freunde (Plural)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noFriends": "Keine Freunde",
+  "manageAll": "Alle verwalten",
+  "quickAddFriend": "Schnell Freund hinzufügen",
+  "noFriendsAdded": "Du hast noch keine Freunde hinzugefügt.",
+  "friendName": "Name des Freundes",
+  "manageFriends": "Freunde verwalten",
+  "friendAddedReopenForm": "{name} wurde hinzugefügt! Bitte Form neu öffnen.",
+  "@friendAddedReopenForm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  
+  "sharedExpenses": "Geteilte Ausgaben",
+  
+  "searchBillOrPerson": "Rechnung oder Person suchen...",
+  "all": "Alle",
+  "shared": "Geteilt",
+  "settled": "Beglichen",
+  "draft": "Entwurf",
+  "noBillsFound": "Keine Rechnungen gefunden",
+  "noBillsAvailable": "Noch keine Rechnungen vorhanden",
+  "tryOtherFilters": "Versuche andere Suchbegriffe oder Filter",
+  "createFirstBillDashboard": "Erstelle deine erste Rechnung über das Dashboard",
+  
+  "newestFirst": "Neueste zuerst",
+  "oldestFirst": "Älteste zuerst",
+  "highestAmount": "Höchster Betrag",
+  "lowestAmount": "Niedrigster Betrag",
+  
+  "demoMode": "Demo",
+  "realMode": "Real",
+  "switchToReal": "🚀 Real-Mode aktiviert! Echte Datenbank wird verwendet.",
+  
+  "errorLoadingFriends": "Fehler beim Laden der Freunde: {error}",
+  "@errorLoadingFriends": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorLoadingBills": "Fehler beim Laden der Rechnungen: {error}",
+  "@errorLoadingBills": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  }
+}

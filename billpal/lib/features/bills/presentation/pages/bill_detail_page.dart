@@ -121,7 +121,7 @@ class _BillDetailPageState extends State<BillDetailPage> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: _getStatusColor().withOpacity(0.1),
+                    color: _getStatusColor().withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Text(
@@ -138,34 +138,34 @@ class _BillDetailPageState extends State<BillDetailPage> {
             const SizedBox(height: 12),
             Row(
               children: [
-                Icon(Icons.person, size: 16, color: Colors.grey.shade600),
+                Icon(Icons.person, size: 16, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6)),
                 const SizedBox(width: 8),
                 Text(
                   'Bezahlt von ${_bill.paidBy.name}',
-                  style: TextStyle(color: Colors.grey.shade600),
+                  style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6)),
                 ),
               ],
             ),
             const SizedBox(height: 6),
             Row(
               children: [
-                Icon(Icons.calendar_today, size: 16, color: Colors.grey.shade600),
+                Icon(Icons.calendar_today, size: 16, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6)),
                 const SizedBox(width: 8),
                 Text(
                   dateFormat.format(_bill.date),
-                  style: TextStyle(color: Colors.grey.shade600),
+                  style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6)),
                 ),
               ],
             ),
             const SizedBox(height: 6),
             Row(
               children: [
-                Icon(Icons.euro, size: 16, color: Colors.grey.shade600),
+                Icon(Icons.euro, size: 16, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6)),
                 const SizedBox(width: 8),
                 Text(
                   'Gesamtsumme: ${euro(_bill.totalAmount)}',
                   style: TextStyle(
-                    color: Colors.grey.shade600,
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -207,13 +207,13 @@ class _BillDetailPageState extends State<BillDetailPage> {
           position.description,
           style: TextStyle(
             decoration: position.isSettled ? TextDecoration.lineThrough : null,
-            color: position.isSettled ? Colors.grey.shade600 : null,
+            color: position.isSettled ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5) : null,
           ),
         ),
         subtitle: Text(
           'Zugeordnet an: ${position.assignedTo.name}',
           style: TextStyle(
-            color: position.isSettled ? Colors.grey.shade500 : Colors.grey.shade600,
+            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: position.isSettled ? 0.4 : 0.6),
           ),
         ),
         trailing: Column(
@@ -226,7 +226,7 @@ class _BillDetailPageState extends State<BillDetailPage> {
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
                 decoration: position.isSettled ? TextDecoration.lineThrough : null,
-                color: position.isSettled ? Colors.grey.shade600 : null,
+                color: position.isSettled ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5) : null,
               ),
             ),
             if (position.isSettled)

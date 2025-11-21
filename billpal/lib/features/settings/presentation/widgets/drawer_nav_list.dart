@@ -1,3 +1,4 @@
+import 'package:billpal/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 class DrawerNavList extends StatelessWidget {
@@ -5,17 +6,18 @@ class DrawerNavList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       children: [
         _NavTile(
           icon: Icons.dashboard_outlined,
-          label: 'Dashboard',
+          label: l10n.drawerDashboard,
           route: '/',
         ),
-        _NavTile(icon: Icons.history, label: 'Historie', route: '/history'),
+        _NavTile(icon: Icons.history, label: l10n.drawerHistory, route: '/history'),
         _NavTile(
           icon: Icons.people_outlined,
-          label: 'Meine Freunde',
+          label: l10n.drawerMyFriends,
           route: '/friends',
         ),
         const Divider(height: 32),

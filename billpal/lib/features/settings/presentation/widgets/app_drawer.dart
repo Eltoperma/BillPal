@@ -2,6 +2,7 @@ import 'package:billpal/features/settings/presentation/widgets/drawer_nav_list.d
 import 'package:billpal/features/settings/presentation/options/locale_options.dart';
 import 'package:billpal/features/settings/presentation/options/theme_options.dart';
 import 'package:billpal/features/settings/presentation/widgets/options_row.dart';
+import 'package:billpal/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:billpal/core/theme/theme_controller.dart';
 import 'package:billpal/l10n/locale_controller.dart';
@@ -18,6 +19,7 @@ class AppDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final sc = Theme.of(context).colorScheme;
 
     // --- Theme-Optionen ---
@@ -35,24 +37,24 @@ class AppDrawer extends StatelessWidget {
               children: [
                 const FlutterLogo(size: 28),
                 const SizedBox(width: 12),
-                Text('BillPal', style: Theme.of(context).textTheme.titleLarge),
+                Text(l10n.appTitle, style: Theme.of(context).textTheme.titleLarge),
               ],
             ),
             const SizedBox(height: 16),
 
             const DrawerNavList(),
 
-            _sectionLabel(context, 'ERSCHEINUNGSBILD', sc.onSurfaceVariant),
+            _sectionLabel(context, l10n.drawerAppearance, sc.onSurfaceVariant),
             OptionsRow(options: themeOptions), // immer 1 Reihe (max. 3)
 
             const SizedBox(height: 20),
 
-            _sectionLabel(context, 'SPRACHE', sc.onSurfaceVariant),
+            _sectionLabel(context, l10n.drawerLanguage, sc.onSurfaceVariant),
             OptionsRow(options: localeOptions), // immer 1 Reihe (max. 3)
 
             const SizedBox(height: 12),
             Text(
-              'Sprachen und Theme wirken sofort app-weit.',
+              l10n.drawerLanguageInfo,
               style: Theme.of(
                 context,
               ).textTheme.bodySmall?.copyWith(color: sc.onSurfaceVariant),

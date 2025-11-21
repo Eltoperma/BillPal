@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../../infrastructure/ocr/receipt_data.dart';
 import 'package:billpal/shared/domain/entities.dart';
 import 'package:billpal/shared/application/services.dart';
 import '../../bill_service.dart';
@@ -52,7 +53,53 @@ Future<void> openAddInvoice(
         ),
       ),
     );
+  } else {
+    await showDialog(
+      context: context,
+      builder: (ctx) => Dialog(
+        insetPadding: const EdgeInsets.all(24),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 720),
+          child: SingleChildScrollView(child: child),
+        ),
+      ),
+    );
+  }
+}
 
+Future<void> openAddInvoiceWithData(
+  BuildContext context, {
+  required List<Person> people,
+  required ReceiptData receiptData,
+  void Function(InvoiceData data)? onSubmit,
+}) async {
+  final width = MediaQuery.of(context).size.width;
+  final child = AddInvoiceForm(
+    people: people,
+    onSubmit: onSubmit,
+    initialReceiptData: receiptData,
+  );
+
+  if (width < 700) {
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+        child: DraggableScrollableSheet(
+          expand: false,
+          maxChildSize: 0.95,
+          minChildSize: 0.5,
+          initialChildSize: 0.85,
+          builder: (_, scrollController) =>
+              SingleChildScrollView(controller: scrollController, child: child),
+        ),
+      ),
+    );
   } else {
     await showDialog(
       context: context,
@@ -70,7 +117,14 @@ Future<void> openAddInvoice(
 class AddInvoiceForm extends StatefulWidget {
   final List<Person> people;
   final void Function(InvoiceData data)? onSubmit;
-  const AddInvoiceForm({super.key, required this.people, this.onSubmit});
+  final ReceiptData? initialReceiptData;
+
+  const AddInvoiceForm({
+    super.key,
+    required this.people,
+    this.onSubmit,
+    this.initialReceiptData,
+  });
 
   @override
   State<AddInvoiceForm> createState() => _AddInvoiceFormState();
@@ -83,6 +137,36 @@ class _AddInvoiceFormState extends State<AddInvoiceForm> {
   final _items = <LineItem>[LineItem()];
 
   final _currencyFmt = NumberFormat.currency(locale: 'de_DE', symbol: '€');
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialReceiptData != null) {
+      _populateFormFromReceipt(widget.initialReceiptData!);
+    }
+  }
+
+  void _populateFormFromReceipt(ReceiptData receiptData) {
+    // Set title from restaurant name if available
+    if (receiptData.restaurantName != null &&
+        receiptData.restaurantName!.isNotEmpty) {
+      _titleCtrl.text = receiptData.restaurantName!;
+    }
+
+    // Convert receipt line items to form line items
+    if (receiptData.items.isNotEmpty) {
+      _items.clear();
+      for (final receiptItem in receiptData.items) {
+        _items.add(
+          LineItem(
+            description: receiptItem.description,
+            amount: receiptItem.totalPrice,
+            assignee: null, // User needs to assign manually
+          ),
+        );
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -114,7 +198,9 @@ class _AddInvoiceFormState extends State<AddInvoiceForm> {
         try {
           return int.parse(userId);
         } catch (e) {
-          AppLogger.bills.warning('⚠️ User-ID "$userId" nicht parsebar, verwende Fallback ID 1');
+          AppLogger.bills.warning(
+            '⚠️ User-ID "$userId" nicht parsebar, verwende Fallback ID 1',
+          );
           return 1;
         }
     }
@@ -128,7 +214,7 @@ class _AddInvoiceFormState extends State<AddInvoiceForm> {
       initialDate: _dateTime,
       locale: const Locale('de', 'DE'),
     );
-    if (date == null) return;
+    if (date == null || !mounted) return;
     final time = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.fromDateTime(_dateTime),
@@ -137,7 +223,7 @@ class _AddInvoiceFormState extends State<AddInvoiceForm> {
         child: child!,
       ),
     );
-    if (time == null) return;
+    if (time == null || !mounted) return;
     setState(() {
       _dateTime = DateTime(
         date.year,
@@ -183,41 +269,49 @@ class _AddInvoiceFormState extends State<AddInvoiceForm> {
     try {
       AppLogger.bills.info('🟡 Starte Speichervorgang...');
       final billService = BillService();
-      
+
       // LineItems zu LineItemData konvertieren
       AppLogger.bills.debug('🟡 Konvertiere ${_items.length} Items...');
       final lineItemsData = <LineItemData>[];
-      
+
       for (int i = 0; i < _items.length; i++) {
         final item = _items[i];
-        AppLogger.bills.debug('🟡 Item ${i+1}: "${item.description}" - Amount: ${item.amount} - Assignee: ${item.assignee?.name} (ID: ${item.assignee?.id})');
-        
+        AppLogger.bills.debug(
+          '🟡 Item ${i + 1}: "${item.description}" - Amount: ${item.amount} - Assignee: ${item.assignee?.name} (ID: ${item.assignee?.id})',
+        );
+
         // Validierung
-        if (item.description.trim().isEmpty || 
-            item.amount == null || 
+        if (item.description.trim().isEmpty ||
+            item.amount == null ||
             item.amount! <= 0 ||
             item.assignee == null) {
-          AppLogger.bills.debug('⚠️ Item ${i+1} übersprungen (ungültig)');
+          AppLogger.bills.debug('⚠️ Item ${i + 1} übersprungen (ungültig)');
           continue;
         }
-        
+
         // Person ID zu int konvertieren
         int? assigneeUserId;
         try {
           assigneeUserId = int.parse(item.assignee!.id);
-          AppLogger.bills.debug('✅ Person ID "${item.assignee!.id}" → $assigneeUserId');
+          AppLogger.bills.debug(
+            '✅ Person ID "${item.assignee!.id}" → $assigneeUserId',
+          );
         } catch (e) {
-          AppLogger.bills.error('❌ Fehler bei Person ID Konvertierung: "${item.assignee!.id}" → $e');
+          AppLogger.bills.error(
+            '❌ Fehler bei Person ID Konvertierung: "${item.assignee!.id}" → $e',
+          );
           // Fallback: Verwende Hash-Code oder feste ID
           assigneeUserId = item.assignee!.id.hashCode.abs() % 10000;
           AppLogger.bills.debug('🔧 Fallback Person ID: $assigneeUserId');
         }
-        
-        lineItemsData.add(LineItemData(
-          description: item.description,
-          amount: item.amount!,
-          assigneeUserId: assigneeUserId,
-        ));
+
+        lineItemsData.add(
+          LineItemData(
+            description: item.description,
+            amount: item.amount!,
+            assigneeUserId: assigneeUserId,
+          ),
+        );
       }
 
       AppLogger.bills.debug('🟡 Gültige Items: ${lineItemsData.length}');
@@ -243,7 +337,7 @@ class _AddInvoiceFormState extends State<AddInvoiceForm> {
             backgroundColor: Colors.green,
           ),
         );
-        
+
         // Callback aufrufen falls gesetzt
         widget.onSubmit?.call(data);
         Navigator.of(context).maybePop();
@@ -291,7 +385,6 @@ class _AddInvoiceFormState extends State<AddInvoiceForm> {
               ],
             ),
             const SizedBox(height: 8),
-
             TextFormField(
               controller: _titleCtrl,
               textInputAction: TextInputAction.next,
@@ -303,7 +396,6 @@ class _AddInvoiceFormState extends State<AddInvoiceForm> {
                   (v == null || v.trim().isEmpty) ? 'Titel erforderlich' : null,
             ),
             const SizedBox(height: 12),
-
             InkWell(
               onTap: _pickDateTime,
               borderRadius: BorderRadius.circular(8),
@@ -323,7 +415,6 @@ class _AddInvoiceFormState extends State<AddInvoiceForm> {
               ),
             ),
             const SizedBox(height: 16),
-
             Row(
               children: [
                 const Text(
@@ -339,7 +430,6 @@ class _AddInvoiceFormState extends State<AddInvoiceForm> {
               ],
             ),
             const SizedBox(height: 8),
-
             for (int i = 0; i < _items.length; i++) ...[
               _LineItemRow(
                 key: ValueKey('line-$i'),
@@ -350,7 +440,6 @@ class _AddInvoiceFormState extends State<AddInvoiceForm> {
               ),
               const SizedBox(height: 8),
             ],
-
             const Divider(height: 24),
             Row(
               children: [
@@ -363,7 +452,6 @@ class _AddInvoiceFormState extends State<AddInvoiceForm> {
               ],
             ),
             const SizedBox(height: 16),
-
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
@@ -482,12 +570,15 @@ class _LineItemRowState extends State<_LineItemRow> {
             const SizedBox(width: 8),
             Expanded(
               flex: 3,
-              child: widget.people.isEmpty 
-                  ? _buildAddFriendButton() 
+              child: widget.people.isEmpty
+                  ? _buildAddFriendButton()
                   : DropdownButtonFormField<Person>(
                       initialValue: _assignee,
                       items: widget.people
-                          .map((p) => DropdownMenuItem(value: p, child: Text(p.name)))
+                          .map(
+                            (p) =>
+                                DropdownMenuItem(value: p, child: Text(p.name)),
+                          )
                           .toList(),
                       onChanged: (p) {
                         setState(() => _assignee = p);
@@ -524,7 +615,7 @@ class _LineItemRowState extends State<_LineItemRow> {
 
   Future<void> _showAddFriendQuickDialog() async {
     final userService = UserService();
-    
+
     final result = await showDialog<Person>(
       context: context,
       builder: (context) => AlertDialog(
@@ -542,12 +633,14 @@ class _LineItemRowState extends State<_LineItemRow> {
               onFieldSubmitted: (name) async {
                 if (name.trim().isNotEmpty) {
                   try {
-                    final newFriend = await userService.addFriend(name: name.trim());
+                    final newFriend = await userService.addFriend(
+                      name: name.trim(),
+                    );
                     Navigator.pop(context, newFriend);
                   } catch (e) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Fehler: $e')),
-                    );
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text('Fehler: $e')));
                   }
                 }
               },
@@ -570,12 +663,16 @@ class _LineItemRowState extends State<_LineItemRow> {
         ],
       ),
     );
-    
+
     if (result != null) {
       // Refresh parent widget to show new friend
       // (This is a quick solution - in real app you'd use state management)
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${result.name} wurde hinzugefügt! Bitte Form neu öffnen.')),
+        SnackBar(
+          content: Text(
+            '${result.name} wurde hinzugefügt! Bitte Form neu öffnen.',
+          ),
+        ),
       );
     }
   }

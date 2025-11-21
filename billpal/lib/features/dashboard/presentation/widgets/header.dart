@@ -1,5 +1,6 @@
 import 'package:billpal/core/utils/currency.dart';
 import 'package:billpal/shared/domain/entities.dart';
+import 'package:billpal/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 class DashboardHeader extends StatelessWidget {
@@ -8,21 +9,24 @@ class DashboardHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final positive = summary.netBalance >= 0;
     final color = positive ? Colors.green : Colors.red;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('BillPal',
+        Text(l10n.appTitle,
           style: Theme.of(context).textTheme.headlineMedium?.copyWith(
             fontWeight: FontWeight.bold,
-            color: Colors.black87
           ),
         ),  
         const SizedBox(height: 4),
-        const Text('Geteilte Rechnungen mit Freunden',
-            style: TextStyle(color: Colors.black54, fontSize: 16)),
+        Text(l10n.appSubtitle,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+              fontSize: 16,
+            )),
         const SizedBox(height: 8),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -37,8 +41,8 @@ class DashboardHeader extends StatelessWidget {
             const SizedBox(width: 4),
             Text(
               positive
-                  ? 'Du bekommst ${euro(summary.netBalance)}'
-                  : 'Du schuldest ${euro(-summary.netBalance)}',
+                  ? l10n.youWillReceive(euro(summary.netBalance))
+                  : l10n.youOwe(euro(-summary.netBalance)),
               style: TextStyle(color: color.shade700, fontWeight: FontWeight.w600, fontSize: 14),
             ),
           ]),

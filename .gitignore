@@ -1,0 +1,12 @@
+# Root level build directory (CMake/IDE builds)
+build/
+
+# OS specific
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.iml
+
