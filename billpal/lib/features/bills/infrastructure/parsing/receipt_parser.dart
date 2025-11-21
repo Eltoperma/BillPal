@@ -26,18 +26,16 @@ class ReceiptParser {
     RegExp(r'(\d+),\s+(\d{2})(?:\s*(?:€|Euro|EUR))?'),
   ];
 
-  // Quantity patterns - more flexible to catch all variations
   static final _quantityPrefixPattern = RegExp(
-    r'^(\d+)\s*[xX×*]\s*(.+)', // Made space after x optional too
+    r'^(\d+)\s*[xX×*]\s*(.+)',
     caseSensitive: false,
   );
   static final _quantitySuffixPattern = RegExp(
-    r'(.+?)\s*[xX×*]\s*(\d+)$', // Made spaces more flexible
+    r'(.+?)\s*[xX×*]\s*(\d+)$',
     caseSensitive: false,
   );
 
-  // Extended keywords for different languages and formats
-  static final _totalKeywords = [
+  static final _sumKeywords = [
     // German
     'total',
     'summe',
@@ -220,7 +218,7 @@ class ReceiptParser {
       final lineLower = line.toLowerCase();
 
       // Check if line contains a total keyword
-      final keyword = _totalKeywords.firstWhere(
+      final keyword = _sumKeywords.firstWhere(
         (k) => lineLower.contains(k.toLowerCase()),
         orElse: () => '',
       );
@@ -396,7 +394,7 @@ class ReceiptParser {
 
     // Total keywords - but ONLY if they match as whole words to avoid false positives
     // e.g., "bar" in "Rhabarber" should not match
-    for (final keyword in _totalKeywords) {
+    for (final keyword in _sumKeywords) {
       final keywordLower = keyword.toLowerCase();
       // Check if keyword appears as whole word (with word boundaries)
       if (RegExp(r'\b' + RegExp.escape(keywordLower) + r'\b').hasMatch(lower)) {
